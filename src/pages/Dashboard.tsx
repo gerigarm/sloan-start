@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle, Loader2, Plus, Check, X } from "lucide-react";
 import JourneyGraph from "@/components/JourneyGraph";
 import { DashboardChatWidget } from "@/components/chat/DashboardChatWidget";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { differenceInWeeks } from "date-fns";
@@ -10,9 +13,17 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type KnowledgeSource = Tables<"knowledge_sources">;
 
+interface UserNote {
+  id: string;
+  user_id: string;
+  title: string;
+  category: string;
+  is_completed: boolean;
+  created_at: string;
+}
+
 const useCurrentWeek = () => {
   const { user } = useAuth();
-
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -25,32 +36,90 @@ const useCurrentWeek = () => {
     },
     enabled: !!user,
   });
-
   if (!profile) return 0;
-  const weeks = differenceInWeeks(new Date(), new Date(profile.created_at));
-  return Math.min(Math.max(weeks, 0), 5); // 0-indexed, 6-week program
+  return Math.min(Math.max(differenceInWeeks(new Date(), new Date(profile.created_at)), 0), 5);
 };
 
-const useKnowledgeSources = () => {
-  return useQuery({
+const useKnowledgeSources = () =>
+  useQuery({
     queryKey: ["knowledge_sources"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("knowledge_sources")
-        .select("*")
-        .eq("is_active", true);
+      const { data, error } = await supabase.from("knowledge_sources").select("*").eq("is_active", true);
       if (error) throw error;
       return data as KnowledgeSource[];
     },
   });
+
+const useUserNotes = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["user_notes", user?.id],
+    queryFn: async () => {
+      // Use raw query since types may not be generated yet
+      const { data, error } = await (supabase as any).from("user_notes").select("*").eq("user_id", user!.id).order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as UserNote[];
+    },
+    enabled: !!user,
+  });
 };
 
-const PanelList = ({ items, emptyText }: { items: KnowledgeSource[]; emptyText: string }) => {
-  if (!items.length) {
+const AddNoteInline = ({ category, onAdd }: { category: string; onAdd: (title: string, category: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+
+  if (!open) {
     return (
-      <p className="text-xs text-muted-foreground italic">{emptyText}</p>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+      >
+        <Plus className="h-3 w-3" /> Add note
+      </button>
     );
   }
+
+  const submit = () => {
+    if (value.trim()) {
+      onAdd(value.trim(), category);
+      setValue("");
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 mt-1">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
+        placeholder="Add a note…"
+        className="h-7 text-xs"
+        autoFocus
+      />
+      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={submit}>
+        <Check className="h-3 w-3" />
+      </Button>
+      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => { setOpen(false); setValue(""); }}>
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
+
+const NoteItem = ({ note, onToggle }: { note: UserNote; onToggle: (id: string, completed: boolean) => void }) => (
+  <li className="text-xs text-foreground flex items-start gap-1.5 group">
+    <button onClick={() => onToggle(note.id, !note.is_completed)} className="mt-0.5 shrink-0">
+      <span className={`block h-3 w-3 rounded border ${note.is_completed ? "bg-primary border-primary" : "border-muted-foreground"} flex items-center justify-center`}>
+        {note.is_completed && <Check className="h-2 w-2 text-primary-foreground" />}
+      </span>
+    </button>
+    <span className={note.is_completed ? "line-through text-muted-foreground" : ""}>{note.title}</span>
+  </li>
+);
+
+const PanelList = ({ items, emptyText }: { items: KnowledgeSource[]; emptyText: string }) => {
+  if (!items.length) return <p className="text-xs text-muted-foreground italic">{emptyText}</p>;
   return (
     <ul className="space-y-1.5">
       {items.slice(0, 4).map((item) => (
@@ -61,43 +130,56 @@ const PanelList = ({ items, emptyText }: { items: KnowledgeSource[]; emptyText: 
               <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary transition-colors">
                 {item.title}
               </a>
-            ) : (
-              item.title
-            )}
+            ) : item.title}
           </span>
         </li>
       ))}
-      {items.length > 4 && (
-        <li className="text-xs text-muted-foreground">+{items.length - 4} more</li>
-      )}
+      {items.length > 4 && <li className="text-xs text-muted-foreground">+{items.length - 4} more</li>}
     </ul>
   );
 };
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const currentWeek = useCurrentWeek();
   const { data: sources, isLoading } = useKnowledgeSources();
+  const { data: userNotes } = useUserNotes();
+  const queryClient = useQueryClient();
 
-  // Filter by current week or no week (always relevant)
-  const relevant = (sources ?? []).filter(
-    (s) => s.week_relevant === null || s.week_relevant === currentWeek
-  );
+  const addNote = useMutation({
+    mutationFn: async ({ title, category }: { title: string; category: string }) => {
+      const { error } = await (supabase as any).from("user_notes").insert({ user_id: user!.id, title, category });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user_notes"] }),
+  });
 
+  const toggleNote = useMutation({
+    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+      const { error } = await (supabase as any).from("user_notes").update({ is_completed: completed }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user_notes"] }),
+  });
+
+  const relevant = (sources ?? []).filter((s) => s.week_relevant === null || s.week_relevant === currentWeek);
   const priorities = relevant.filter((s) => s.content_type === "milestone");
-  const deferred = (sources ?? []).filter(
-    (s) => s.content_type === "milestone" && s.week_relevant !== null && s.week_relevant > currentWeek
-  );
+  const deferred = (sources ?? []).filter((s) => s.content_type === "milestone" && s.week_relevant !== null && s.week_relevant > currentWeek);
   const deadlines = relevant.filter((s) => s.content_type === "deadline");
-  const linksContacts = relevant.filter((s) =>
-    ["link", "contact", "resource"].includes(s.content_type)
-  );
+  const linksContacts = relevant.filter((s) => ["link", "contact", "resource"].includes(s.content_type));
   const weeklyNote = relevant.find((s) => s.content_type === "weekly_guidance");
 
-  const LoadingPlaceholder = () => (
+  const priorityNotes = (userNotes ?? []).filter((n) => n.category === "priority");
+  const deferredNotes = (userNotes ?? []).filter((n) => n.category === "deferred");
+
+  const Loading = () => (
     <div className="flex items-center justify-center py-3">
       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
     </div>
   );
+
+  const handleAdd = (title: string, category: string) => addNote.mutate({ title, category });
+  const handleToggle = (id: string, completed: boolean) => toggleNote.mutate({ id, completed });
 
   return (
     <div className="space-y-5">
@@ -118,10 +200,14 @@ const Dashboard = () => {
               What Matters Now
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? <LoadingPlaceholder /> : (
-              <PanelList items={priorities} emptyText="No priorities this week" />
+          <CardContent className="px-4 pb-4 space-y-2">
+            {isLoading ? <Loading /> : <PanelList items={priorities} emptyText="No priorities this week" />}
+            {priorityNotes.length > 0 && (
+              <ul className="space-y-1.5 border-t border-border pt-2">
+                {priorityNotes.map((n) => <NoteItem key={n.id} note={n} onToggle={handleToggle} />)}
+              </ul>
             )}
+            <AddNoteInline category="priority" onAdd={handleAdd} />
           </CardContent>
         </Card>
 
@@ -132,10 +218,14 @@ const Dashboard = () => {
               What Can Wait
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? <LoadingPlaceholder /> : (
-              <PanelList items={deferred} emptyText="Nothing deferred" />
+          <CardContent className="px-4 pb-4 space-y-2">
+            {isLoading ? <Loading /> : <PanelList items={deferred} emptyText="Nothing deferred" />}
+            {deferredNotes.length > 0 && (
+              <ul className="space-y-1.5 border-t border-border pt-2">
+                {deferredNotes.map((n) => <NoteItem key={n.id} note={n} onToggle={handleToggle} />)}
+              </ul>
             )}
+            <AddNoteInline category="deferred" onAdd={handleAdd} />
           </CardContent>
         </Card>
 
@@ -147,9 +237,7 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {isLoading ? <LoadingPlaceholder /> : (
-              <PanelList items={deadlines} emptyText="No deadlines this week" />
-            )}
+            {isLoading ? <Loading /> : <PanelList items={deadlines} emptyText="No deadlines this week" />}
           </CardContent>
         </Card>
 
@@ -161,9 +249,7 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {isLoading ? <LoadingPlaceholder /> : (
-              <PanelList items={linksContacts} emptyText="No links yet" />
-            )}
+            {isLoading ? <Loading /> : <PanelList items={linksContacts} emptyText="No links yet" />}
           </CardContent>
         </Card>
       </div>
@@ -179,7 +265,11 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {isLoading ? <LoadingPlaceholder /> : weeklyNote ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : weeklyNote ? (
               <p className="text-xs text-foreground leading-relaxed">{weeklyNote.content}</p>
             ) : (
               <p className="text-xs text-muted-foreground italic">No note for this week</p>
