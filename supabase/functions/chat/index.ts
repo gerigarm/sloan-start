@@ -63,13 +63,17 @@ serve(async (req) => {
       profile = data;
     }
 
-    // 3. Get recent wellbeing data
-    const { data: recentCheckins } = await supabase
-      .from("wellbeing_checkins")
-      .select("energy_level, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    // 3. Get recent wellbeing data (skip in demo mode)
+    let recentCheckins: any[] | null = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("wellbeing_checkins")
+        .select("energy_level, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      recentCheckins = data;
+    }
 
     const avgEnergy = recentCheckins?.length
       ? Math.round(recentCheckins.reduce((s, c) => s + c.energy_level, 0) / recentCheckins.length)
