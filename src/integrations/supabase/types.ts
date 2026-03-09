@@ -175,6 +175,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notes: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_completed: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wellbeing_checkins: {
         Row: {
           created_at: string
