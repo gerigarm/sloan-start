@@ -1,33 +1,111 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { ChatMessageList } from "@/components/chat/ChatMessageList";
+import { ChatInput } from "@/components/chat/ChatInput";
+import { ChatEmptyState } from "@/components/chat/ChatEmptyState";
+import { streamChat, trackChatEvent } from "@/lib/chat-stream";
+import type { ChatMessage } from "@/lib/chat-types";
 
 const Chat = () => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackChatEvent("chatbot_opened");
+  }, []);
+
+  const handleSend = useCallback(
+    async (input: string) => {
+      const userMsg: ChatMessage = { role: "user", content: input };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsLoading(true);
+      setError(null);
+
+      if (messages.length === 0) {
+        trackChatEvent("first_message_sent", { message: input });
+      }
+
+      let assistantSoFar = "";
+      const allMessages = [...messages, userMsg].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      try {
+        await streamChat({
+          messages: allMessages,
+          onDelta: (chunk) => {
+            assistantSoFar += chunk;
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return prev.map((m, i) =>
+                  i === prev.length - 1 ? { ...m, content: assistantSoFar } : m
+                );
+              }
+              return [...prev, { role: "assistant", content: assistantSoFar }];
+            });
+          },
+          onDone: () => {
+            setIsLoading(false);
+            // Check if it's a fallback
+            const lower = assistantSoFar.toLowerCase();
+            if (
+              lower.includes("i don't have a verified answer") ||
+              lower.includes("i'm not fully certain")
+            ) {
+              trackChatEvent("fallback_triggered", { question: input });
+              setMessages((prev) =>
+                prev.map((m, i) =>
+                  i === prev.length - 1 ? { ...m, isFallback: true } : m
+                )
+              );
+            }
+          },
+          onError: (err) => {
+            setIsLoading(false);
+            setError(err);
+            trackChatEvent("error", { error: err });
+          },
+        });
+      } catch (e) {
+        setIsLoading(false);
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      }
+    },
+    [messages]
+  );
+
+  const isEmpty = messages.length === 0;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="mb-4">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)]">
+      <div className="mb-3">
         <h1 className="font-serif text-3xl text-foreground">Ask 6W</h1>
-        <p className="text-muted-foreground mt-1">Get answers grounded in real Sloan information</p>
+        <p className="text-muted-foreground text-sm mt-0.5">
+          Get answers grounded in real Sloan information
+        </p>
       </div>
 
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3 border-b">
-          <CardTitle className="font-sans text-base">AI Assistant</CardTitle>
-          <CardDescription>Every answer cites its source. If unsure, I'll say so.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 flex items-center justify-center">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Chatbot will be built in Step 6.</p>
-            <p className="mt-1">It will use retrieval-augmented generation with stored Sloan content.</p>
+      <Card className="flex-1 flex flex-col overflow-hidden shadow-[var(--shadow-card)]">
+        {isEmpty && !isLoading ? (
+          <ChatEmptyState />
+        ) : (
+          <ChatMessageList messages={messages} isLoading={isLoading} />
+        )}
+
+        {error && (
+          <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs text-center">
+            {error}
           </div>
-        </CardContent>
-        <div className="p-4 border-t flex gap-2">
-          <Input placeholder="Ask about deadlines, policies, contacts..." disabled />
-          <Button size="icon" disabled>
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        )}
+
+        <ChatInput
+          onSend={handleSend}
+          disabled={isLoading}
+          showSuggestions={isEmpty}
+        />
       </Card>
     </div>
   );
