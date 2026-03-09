@@ -45,7 +45,7 @@ const Landing = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
           >
-            Sloan Compass helps you navigate onboarding with clarity — personalized priorities,
+            Sloan 6W helps you navigate onboarding with clarity — personalized priorities,
             key deadlines, and an AI assistant grounded in real Sloan information.
           </motion.p>
 
