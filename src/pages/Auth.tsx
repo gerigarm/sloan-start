@@ -71,7 +71,7 @@ const Auth = () => {
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-2">
           <Compass className="h-8 w-8 text-primary" />
-          <h1 className="font-serif text-2xl text-foreground">Sloan Compass</h1>
+          <h1 className="font-serif text-2xl text-foreground">Sloan 6W</h1>
           <p className="text-sm text-muted-foreground">Sign in with your MIT email</p>
         </div>
 

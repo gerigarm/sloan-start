@@ -76,7 +76,7 @@ const Landing = () => {
       </main>
 
       <footer className="py-6 text-center text-xs text-muted-foreground">
-        Built for MIT Sloan students · Sloan Compass
+        Built for MIT Sloan students · Sloan 6W
       </footer>
     </div>
   );
