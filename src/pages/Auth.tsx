@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
