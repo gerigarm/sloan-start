@@ -49,7 +49,7 @@ export function AppSidebar() {
         <NavLink to="/dashboard" className="flex items-center gap-2">
           <Compass className="h-6 w-6 text-primary shrink-0" />
           {!collapsed && (
-            <span className="font-serif text-lg text-foreground">Sloan Compass</span>
+            <span className="font-serif text-lg text-foreground">Sloan 6W</span>
           )}
         </NavLink>
       </SidebarHeader>

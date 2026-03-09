@@ -19,7 +19,7 @@ const Landing = () => {
       <header className="flex items-center justify-between px-6 py-4 md:px-12">
         <div className="flex items-center gap-2">
           <Compass className="h-6 w-6 text-primary" />
-          <span className="font-serif text-xl text-foreground">Sloan Compass</span>
+          <span className="font-serif text-xl text-foreground">Sloan 6W</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
           Sign in
@@ -45,7 +45,7 @@ const Landing = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
           >
-            Sloan Compass helps you navigate onboarding with clarity — personalized priorities,
+            Sloan 6W helps you navigate onboarding with clarity — personalized priorities,
             key deadlines, and an AI assistant grounded in real Sloan information.
           </motion.p>
 
@@ -76,7 +76,7 @@ const Landing = () => {
       </main>
 
       <footer className="py-6 text-center text-xs text-muted-foreground">
-        Built for MIT Sloan students · Sloan Compass
+        Built for MIT Sloan students · Sloan 6W
       </footer>
     </div>
   );
