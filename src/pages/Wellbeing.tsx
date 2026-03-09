@@ -68,18 +68,12 @@ const Wellbeing = () => {
     : 0;
   const weeksIn = Math.min(Math.floor(daysSinceStart / 7), 6);
 
-  // Group checkins by day for the graph
-  const dailyData = checkins.reduce<{ date: string; avg: number; count: number }[]>((acc, c) => {
-    const date = c.created_at.slice(0, 10);
-    const existing = acc.find((d) => d.date === date);
-    if (existing) {
-      existing.avg = (existing.avg * existing.count + c.energy_level) / (existing.count + 1);
-      existing.count++;
-    } else {
-      acc.push({ date, avg: c.energy_level, count: 1 });
-    }
-    return acc;
-  }, []);
+  // Show every individual log
+  const allLogs = checkins.map((c) => ({
+    energy: c.energy_level,
+    date: c.created_at.slice(0, 10),
+    time: new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  }));
 
   const randomEncouragement = encouragements[totalCheckins % encouragements.length];
 
