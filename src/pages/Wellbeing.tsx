@@ -68,14 +68,41 @@ const Wellbeing = () => {
     : 0;
   const weeksIn = Math.min(Math.floor(daysSinceStart / 7), 6);
 
-  // Show every individual log
-  const allLogs = checkins.map((c) => ({
-    energy: c.energy_level,
-    date: c.created_at.slice(0, 10),
-    time: new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-  }));
+  // Group by day: average energy, count, and week label
+  const dailyData = checkins.reduce<{ date: string; avg: number; count: number; weekDay: string }[]>((acc, c) => {
+    const date = c.created_at.slice(0, 10);
+    const existing = acc.find((d) => d.date === date);
+    if (existing) {
+      existing.avg = (existing.avg * existing.count + c.energy_level) / (existing.count + 1);
+      existing.count++;
+    } else {
+      const d = new Date(c.created_at);
+      const weekDay = d.toLocaleDateString(undefined, { weekday: "short" });
+      acc.push({ date, avg: c.energy_level, count: 1, weekDay });
+    }
+    return acc;
+  }, []);
+
+  // Group days into weeks for labels
+  const getWeekLabel = (dateStr: string) => {
+    if (!checkins.length) return "";
+    const start = new Date(checkins[0].created_at);
+    const current = new Date(dateStr);
+    const diffDays = Math.floor((current.getTime() - start.getTime()) / 86400000);
+    const week = Math.floor(diffDays / 7);
+    return `W${week}`;
+  };
 
   const randomEncouragement = encouragements[totalCheckins % encouragements.length];
+
+  // Identify week boundaries for labels
+  const weekBoundaries = dailyData.reduce<{ startIdx: number; label: string }[]>((acc, d, i) => {
+    const wk = getWeekLabel(d.date);
+    if (i === 0 || wk !== getWeekLabel(dailyData[i - 1].date)) {
+      acc.push({ startIdx: i, label: wk });
+    }
+    return acc;
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -124,31 +151,63 @@ const Wellbeing = () => {
       {/* Energy graph */}
       <Card className="shadow-[var(--shadow-card)]">
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="font-sans text-sm">All check-ins</CardTitle>
+          <CardTitle className="font-sans text-sm">Daily energy</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
-          {allLogs.length > 1 ? (
-            <div className="h-36 flex items-end gap-[2px]">
-              {allLogs.map((d, i) => {
-                const hue = Math.round((d.energy / 100) * 120);
-                return (
-                  <motion.div
-                    key={`${d.date}-${d.time}-${i}`}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${d.energy}%` }}
-                    transition={{ delay: i * 0.02, duration: 0.4 }}
-                    className="flex-1 rounded-t-sm min-w-[3px] max-w-[12px]"
-                    style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
-                    title={`${d.date} ${d.time}: ${d.energy}%`}
-                  />
-                );
-              })}
+          {dailyData.length > 0 ? (
+            <div>
+              <div className="h-36 flex items-end gap-1">
+                {dailyData.map((d, i) => {
+                  const avg = Math.round(d.avg);
+                  const hue = Math.round((avg / 100) * 120);
+                  return (
+                    <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${avg}%` }}
+                        transition={{ delay: i * 0.03, duration: 0.4 }}
+                        className="w-full rounded-t-sm min-w-[6px] max-w-[24px] mx-auto relative"
+                        style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
+                      />
+                      {/* Tooltip on hover */}
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:block
+                        bg-foreground text-background text-[10px] px-2 py-1 rounded-md whitespace-nowrap z-10 shadow-lg">
+                        {avg}% avg · {d.count} log{d.count > 1 ? "s" : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Day labels */}
+              <div className="flex gap-1 mt-1">
+                {dailyData.map((d) => (
+                  <div key={d.date} className="flex-1 text-center">
+                    <span className="text-[9px] text-muted-foreground">{d.weekDay}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Week labels */}
+              {weekBoundaries.length > 0 && (
+                <div className="flex mt-0.5 relative" style={{ height: 14 }}>
+                  {weekBoundaries.map((wb, i) => {
+                    const nextStart = weekBoundaries[i + 1]?.startIdx ?? dailyData.length;
+                    const span = nextStart - wb.startIdx;
+                    return (
+                      <div
+                        key={wb.label}
+                        className="text-center text-[9px] font-medium text-primary/70 border-t border-primary/20"
+                        style={{ flex: span }}
+                      >
+                        {wb.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-36 flex items-center justify-center text-sm text-muted-foreground">
-              {totalCheckins === 0
-                ? "Check in using the energy bar above to start tracking"
-                : "One more check-in to see your graph"}
+              Check in using the energy bar above to start tracking
             </div>
           )}
         </CardContent>
