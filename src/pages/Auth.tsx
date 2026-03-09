@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -121,6 +122,14 @@ const Auth = () => {
             )}
           </CardContent>
         </Card>
+
+        <Button
+          variant="ghost"
+          className="w-full text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/dashboard")}
+        >
+          Skip for now →
+        </Button>
       </div>
     </div>
   );
