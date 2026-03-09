@@ -31,7 +31,9 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Verify user
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!, {
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    if (!anonKey) throw new Error("SUPABASE_ANON_KEY is not configured");
+    const userClient = createClient(SUPABASE_URL, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
@@ -55,7 +57,7 @@ serve(async (req) => {
     // 2. Get user profile for context
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, onboarding_completed")
+      .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
       .eq("user_id", user.id)
       .single();
 
@@ -80,6 +82,11 @@ serve(async (req) => {
 
     const studentContext = [
       profile?.full_name ? `Student name: ${profile.full_name}` : null,
+      profile?.student_type ? `Program: ${profile.student_type.toUpperCase()}` : null,
+      profile?.is_international ? "International student: yes" : null,
+      profile?.relocation_status ? `Relocation: ${profile.relocation_status}` : null,
+      profile?.primary_goals?.length ? `Goals: ${profile.primary_goals.join(", ")}` : null,
+      profile?.concerns?.length ? `Concerns: ${profile.concerns.join(", ")}` : null,
       profile?.onboarding_completed ? "Onboarding: completed" : "Onboarding: in progress",
       avgEnergy !== null ? `Recent average energy level: ${avgEnergy}% (0=empty, 100=fully charged)` : null,
     ].filter(Boolean).join("\n");
