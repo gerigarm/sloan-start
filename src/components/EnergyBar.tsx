@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Check } from "lucide-react";
+import { Zap, Check, X, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -19,8 +19,9 @@ const getEnergyInfo = (value: number) =>
 const EnergyBar = () => {
   const [energy, setEnergy] = useState(50);
   const [submitting, setSubmitting] = useState(false);
-  const [lastCheckin, setLastCheckin] = useState<string | null>(null);
+  const [checkedInToday, setCheckedInToday] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [showSlider, setShowSlider] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -32,16 +33,12 @@ const EnergyBar = () => {
       .select("created_at")
       .eq("user_id", user.id)
       .gte("created_at", today)
-      .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
-        if (data && data.length > 0) {
-          setLastCheckin(today);
-        }
+        if (data && data.length > 0) setCheckedInToday(true);
       });
   }, [user]);
 
-  const alreadyCheckedIn = lastCheckin === new Date().toISOString().slice(0, 10);
   const info = getEnergyInfo(energy);
 
   const handleSubmit = async () => {
@@ -55,18 +52,21 @@ const EnergyBar = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setLastCheckin(new Date().toISOString().slice(0, 10));
+      setCheckedInToday(true);
+      setShowSlider(false);
+      setDismissed(false);
       toast({ title: `${info.emoji} Logged!`, description: info.label });
     }
   };
 
-  const hue = Math.round((energy / 100) * 120);
-  const showBanner = !alreadyCheckedIn && !dismissed;
+  const needsFirstCheckin = !checkedInToday;
+  const showBounce = needsFirstCheckin && !dismissed && !showSlider;
+  const showBanner = (needsFirstCheckin && !dismissed) || showSlider;
 
   return (
     <>
-      {/* Persistent bouncing nudge in header when not checked in */}
-      {!alreadyCheckedIn && (
+      {/* Header element */}
+      {showBounce ? (
         <motion.div
           animate={{ y: [0, -6, 0] }}
           transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
@@ -75,16 +75,17 @@ const EnergyBar = () => {
           <Zap className="h-4 w-4" />
           <span className="hidden sm:inline">Log your energy!</span>
         </motion.div>
-      )}
+      ) : checkedInToday && !showSlider ? (
+        <button
+          onClick={() => setShowSlider(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Log again</span>
+        </button>
+      ) : null}
 
-      {alreadyCheckedIn && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground">
-          <Check className="h-3.5 w-3.5 text-success" />
-          <span className="hidden sm:inline">Checked in today</span>
-        </div>
-      )}
-
-      {/* Full-width banner below header */}
+      {/* Slider banner */}
       <AnimatePresence>
         {showBanner && (
           <motion.div
@@ -98,21 +99,28 @@ const EnergyBar = () => {
               <div className="max-w-xl mx-auto px-4 py-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
-                    >
-                      <Zap className="h-5 w-5 text-warning" />
-                    </motion.div>
+                    {needsFirstCheckin ? (
+                      <motion.div
+                        animate={{ rotate: [0, -10, 10, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
+                      >
+                        <Zap className="h-5 w-5 text-warning" />
+                      </motion.div>
+                    ) : (
+                      <Zap className="h-5 w-5 text-muted-foreground" />
+                    )}
                     <span className="text-sm font-medium text-foreground">
-                      How's your energy today?
+                      {needsFirstCheckin ? "How's your energy today?" : "Update your energy"}
                     </span>
                   </div>
                   <button
-                    onClick={() => setDismissed(true)}
+                    onClick={() => {
+                      if (needsFirstCheckin) setDismissed(true);
+                      setShowSlider(false);
+                    }}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Later
+                    {needsFirstCheckin ? "Later" : "Cancel"}
                   </button>
                 </div>
 
