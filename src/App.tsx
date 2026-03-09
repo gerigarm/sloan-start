@@ -11,7 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import Resources from "./pages/Resources";
-import Checkins from "./pages/Checkins";
+import Wellbeing from "./pages/Wellbeing";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/AppLayout";
