@@ -57,7 +57,7 @@ serve(async (req) => {
     // 2. Get user profile for context
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, onboarding_completed")
+      .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
       .eq("user_id", user.id)
       .single();
 
