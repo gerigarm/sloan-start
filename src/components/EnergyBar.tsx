@@ -26,7 +26,10 @@ const EnergyBar = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setCheckedInToday(true); // hide nudge in skip mode
+      return;
+    }
     const today = new Date().toISOString().slice(0, 10);
     supabase
       .from("wellbeing_checkins")
