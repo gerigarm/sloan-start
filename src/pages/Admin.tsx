@@ -107,10 +107,10 @@ const Admin = () => {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <Shield className="h-6 w-6 text-primary" />
+        <FileText className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="font-serif text-3xl text-foreground">Admin Console</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Manage chatbot content sources and resources</p>
+          <h1 className="font-serif text-3xl text-foreground">Your Sloan 6W Docs</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Upload and manage your key Sloan documents — the chatbot will use them to give you personalized answers</p>
         </div>
       </div>
 
