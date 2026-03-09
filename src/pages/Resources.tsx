@@ -3,18 +3,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarClock, ExternalLink, FileText, Users, HelpCircle, Loader2 } from "lucide-react";
+import { CalendarClock, ExternalLink, FileText, Users, HelpCircle, Loader2, BookOpen } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type KnowledgeSource = Tables<"knowledge_sources">;
 
 const tabConfig = [
   { value: "deadline", label: "Deadlines", icon: CalendarClock, iconClass: "text-destructive" },
-  { value: "link", label: "Links", icon: ExternalLink, iconClass: "text-info" },
-  { value: "policy", label: "Policies", icon: FileText, iconClass: "text-warning" },
+  { value: "resources_links_policies", label: "Resources", icon: BookOpen, iconClass: "text-primary" },
   { value: "contact", label: "Contacts", icon: Users, iconClass: "text-success" },
   { value: "faq", label: "FAQ", icon: HelpCircle, iconClass: "text-muted-foreground" },
-  { value: "resource", label: "Resources", icon: ExternalLink, iconClass: "text-primary" },
 ] as const;
 
 const useKnowledgeSources = () =>
@@ -56,10 +54,61 @@ const ResourceItem = ({ item }: { item: KnowledgeSource }) => (
   </div>
 );
 
+const sectionConfig = [
+  { type: "resource", label: "Resources", icon: BookOpen, iconClass: "text-primary" },
+  { type: "link", label: "Links", icon: ExternalLink, iconClass: "text-info" },
+  { type: "policy", label: "Policies", icon: FileText, iconClass: "text-warning" },
+];
+
+const CombinedResourcesTab = ({ sources, isLoading }: { sources: KnowledgeSource[]; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const hasAny = sectionConfig.some(({ type }) => sources.some((s) => s.content_type === type));
+
+  if (!hasAny) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        No resources available yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {sectionConfig.map(({ type, label, icon: Icon, iconClass }) => {
+        const items = sources.filter((s) => s.content_type === type);
+        if (items.length === 0) return null;
+        return (
+          <div key={type}>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className={`h-4 w-4 ${iconClass}`} />
+              <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+              <span className="text-[10px] bg-muted rounded-full px-1.5 text-muted-foreground">{items.length}</span>
+            </div>
+            <div className="space-y-2">
+              {items.map((item) => (
+                <ResourceItem key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const Resources = () => {
   const { data: sources, isLoading } = useKnowledgeSources();
+  const allSources = sources ?? [];
 
-  const getItems = (type: string) => (sources ?? []).filter((s) => s.content_type === type);
+  const getItems = (type: string) => allSources.filter((s) => s.content_type === type);
+  const getCombinedCount = () => allSources.filter((s) => ["resource", "link", "policy"].includes(s.content_type)).length;
 
   return (
     <div className="space-y-6">
@@ -71,7 +120,7 @@ const Resources = () => {
       <Tabs defaultValue="deadline">
         <TabsList className="flex-wrap h-auto gap-1">
           {tabConfig.map((tab) => {
-            const count = getItems(tab.value).length;
+            const count = tab.value === "resources_links_policies" ? getCombinedCount() : getItems(tab.value).length;
             return (
               <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5">
                 <tab.icon className={`h-3.5 w-3.5 ${tab.iconClass}`} />
@@ -94,7 +143,9 @@ const Resources = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {tab.value === "resources_links_policies" ? (
+                  <CombinedResourcesTab sources={allSources} isLoading={isLoading} />
+                ) : isLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
