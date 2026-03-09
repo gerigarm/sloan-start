@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
@@ -11,6 +11,8 @@ const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoSentRef = useRef(false);
 
   useEffect(() => {
     trackChatEvent("chatbot_opened");
@@ -50,7 +52,6 @@ const Chat = () => {
           },
           onDone: () => {
             setIsLoading(false);
-            // Check if it's a fallback
             const lower = assistantSoFar.toLowerCase();
             if (
               lower.includes("i don't have a verified answer") ||
@@ -77,6 +78,16 @@ const Chat = () => {
     },
     [messages]
   );
+
+  // Auto-send if opened with ?q= param
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && !autoSentRef.current && messages.length === 0) {
+      autoSentRef.current = true;
+      setSearchParams({}, { replace: true });
+      handleSend(q);
+    }
+  }, [searchParams, handleSend, messages.length, setSearchParams]);
 
   const isEmpty = messages.length === 0;
 
