@@ -32,7 +32,7 @@ export function SourceCard({ source }: { source: SourceRef }) {
       href={source.url || undefined}
       target={source.url ? "_blank" : undefined}
       rel="noopener noreferrer"
-      className={`flex items-center gap-1.5 rounded border border-border bg-muted/40 px-2 py-1 text-[10px] transition-colors ${
+      className={`flex items-center gap-1.5 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[7px] transition-colors ${
         source.url ? "hover:bg-accent cursor-pointer" : "cursor-default"
       }`}
     >
@@ -48,8 +48,8 @@ export function SourceList({ sources }: { sources: SourceRef[] }) {
   if (!sources.length) return null;
 
   return (
-    <div className="mt-2 space-y-1.5">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Sources</p>
+    <div className="mt-2 space-y-1">
+      <p className="text-[7px] uppercase tracking-widest text-muted-foreground/60 font-medium">Sources</p>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {sources.map((s, i) => (
           <SourceCard key={s.id || i} source={s} />
