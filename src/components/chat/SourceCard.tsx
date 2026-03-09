@@ -48,8 +48,8 @@ export function SourceList({ sources }: { sources: SourceRef[] }) {
   if (!sources.length) return null;
 
   return (
-    <div className="mt-2 space-y-1.5">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Sources</p>
+    <div className="mt-2 space-y-1">
+      <p className="text-[7px] uppercase tracking-widest text-muted-foreground/60 font-medium">Sources</p>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {sources.map((s, i) => (
           <SourceCard key={s.id || i} source={s} />
