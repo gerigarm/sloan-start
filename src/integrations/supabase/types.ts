@@ -220,6 +220,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_checkins: {
+        Row: {
+          confidence_level: number
+          control_level: number
+          created_at: string
+          id: string
+          stress_causes: string[]
+          stress_level: number
+          user_id: string
+          week_number: number | null
+        }
+        Insert: {
+          confidence_level: number
+          control_level: number
+          created_at?: string
+          id?: string
+          stress_causes?: string[]
+          stress_level: number
+          user_id: string
+          week_number?: number | null
+        }
+        Update: {
+          confidence_level?: number
+          control_level?: number
+          created_at?: string
+          id?: string
+          stress_causes?: string[]
+          stress_level?: number
+          user_id?: string
+          week_number?: number | null
+        }
+        Relationships: []
+      }
       wellbeing_checkins: {
         Row: {
           created_at: string
