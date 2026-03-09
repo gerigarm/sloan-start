@@ -126,7 +126,10 @@ const Auth = () => {
         <Button
           variant="ghost"
           className="w-full text-xs text-muted-foreground hover:text-foreground"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => {
+            localStorage.setItem("skip_auth", "true");
+            navigate("/dashboard");
+          }}
         >
           Skip for now →
         </Button>
