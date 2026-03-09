@@ -81,7 +81,7 @@ const EnergyBar = () => {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Log again</span>
+          <span className="hidden sm:inline">Check in</span>
         </button>
       ) : null}
 
