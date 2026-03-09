@@ -52,12 +52,16 @@ serve(async (req) => {
       .eq("is_active", true)
       .order("content_type");
 
-    // 2. Get user profile for context
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
-      .eq("user_id", user.id)
-      .single();
+    // 2. Get user profile for context (skip in demo mode)
+    let profile: any = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
+        .eq("user_id", userId)
+        .single();
+      profile = data;
+    }
 
     // 3. Get recent wellbeing data
     const { data: recentCheckins } = await supabase
