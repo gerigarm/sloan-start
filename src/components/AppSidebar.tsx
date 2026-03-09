@@ -29,7 +29,7 @@ const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Ask Compass", url: "/chat", icon: MessageSquare },
   { title: "Resources", url: "/resources", icon: BookOpen },
-  { title: "Check-ins", url: "/checkins", icon: Heart },
+  { title: "My Wellbeing", url: "/wellbeing", icon: Heart },
 ];
 
 const adminNav = [

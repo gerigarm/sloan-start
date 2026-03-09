@@ -11,7 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import Resources from "./pages/Resources";
-import Checkins from "./pages/Checkins";
+import Wellbeing from "./pages/Wellbeing";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/AppLayout";
@@ -42,7 +42,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/resources" element={<Resources />} />
-              <Route path="/checkins" element={<Checkins />} />
+              <Route path="/wellbeing" element={<Wellbeing />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
 
