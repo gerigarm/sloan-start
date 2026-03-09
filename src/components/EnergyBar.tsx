@@ -26,10 +26,7 @@ const EnergyBar = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
-      setCheckedInToday(true); // hide nudge in skip mode
-      return;
-    }
+    if (!user) return; // keep nudge visible in skip mode
     const today = new Date().toISOString().slice(0, 10);
     supabase
       .from("wellbeing_checkins")
@@ -45,7 +42,13 @@ const EnergyBar = () => {
   const info = getEnergyInfo(energy);
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      // Skip mode: just dismiss the banner
+      setCheckedInToday(true);
+      setShowSlider(false);
+      toast({ title: `${info.emoji} Logged!`, description: info.label });
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("wellbeing_checkins").insert({
       user_id: user.id,
