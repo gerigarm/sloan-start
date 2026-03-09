@@ -73,20 +73,24 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Weekly note — compact */}
-      <Card className="shadow-[var(--shadow-card)]">
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="font-sans text-sm flex items-center gap-1.5">
-            <MessageCircle className="h-3.5 w-3.5 text-success" />
-            This Week's Note
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-            What's normal to feel right now — Step 4
-          </div>
-        </CardContent>
-      </Card>
+      {/* Ask 6W widget + Weekly note side by side */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <DashboardChatWidget />
+
+        <Card className="shadow-[var(--shadow-card)]">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="font-sans text-sm flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5 text-success" />
+              This Week's Note
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+              What's normal to feel right now — Step 4
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
