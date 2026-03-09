@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { FileText, Plus, Pencil, Trash2, X, Check, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -107,10 +107,10 @@ const Admin = () => {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <Shield className="h-6 w-6 text-primary" />
+        <FileText className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="font-serif text-3xl text-foreground">Admin Console</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Manage chatbot content sources and resources</p>
+          <h1 className="font-serif text-3xl text-foreground">Your Sloan 6W Docs</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Upload and manage your key Sloan documents — the chatbot will use them to give you personalized answers</p>
         </div>
       </div>
 

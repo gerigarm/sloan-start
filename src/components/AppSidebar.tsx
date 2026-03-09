@@ -33,7 +33,7 @@ const mainNav = [
 ];
 
 const adminNav = [
-  { title: "Admin Console", url: "/admin", icon: Shield },
+  { title: "Your Docs", url: "/admin", icon: Shield },
 ];
 
 export function AppSidebar() {
