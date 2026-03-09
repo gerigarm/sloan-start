@@ -19,30 +19,28 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Auth check
+    // Auth check — allow unauthenticated demo mode
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let userId: string | null = null;
+    let isDemo = false;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+      if (!anonKey) throw new Error("SUPABASE_ANON_KEY is not configured");
+      const userClient = createClient(SUPABASE_URL, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const { data: { user }, error: userError } = await userClient.auth.getUser();
+      if (!userError && user) {
+        userId = user.id;
+      }
+    }
+
+    if (!userId) {
+      isDemo = true;
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Verify user
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-    if (!anonKey) throw new Error("SUPABASE_ANON_KEY is not configured");
-    const userClient = createClient(SUPABASE_URL, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const { messages, sessionId } = await req.json();
     const userMessage = messages[messages.length - 1]?.content || "";
@@ -54,20 +52,28 @@ serve(async (req) => {
       .eq("is_active", true)
       .order("content_type");
 
-    // 2. Get user profile for context
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
-      .eq("user_id", user.id)
-      .single();
+    // 2. Get user profile for context (skip in demo mode)
+    let profile: any = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, onboarding_completed, student_type, is_international, relocation_status, primary_goals, concerns")
+        .eq("user_id", userId)
+        .single();
+      profile = data;
+    }
 
-    // 3. Get recent wellbeing data
-    const { data: recentCheckins } = await supabase
-      .from("wellbeing_checkins")
-      .select("energy_level, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    // 3. Get recent wellbeing data (skip in demo mode)
+    let recentCheckins: any[] | null = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("wellbeing_checkins")
+        .select("energy_level, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      recentCheckins = data;
+    }
 
     const avgEnergy = recentCheckins?.length
       ? Math.round(recentCheckins.reduce((s, c) => s + c.energy_level, 0) / recentCheckins.length)

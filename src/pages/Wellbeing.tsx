@@ -38,12 +38,28 @@ const CHATBOT_PROMPTS = [
   { label: "What deadlines matter now?", icon: "📅" },
 ];
 
+// ─── Demo data for skip-auth mode ────────────────────────────────
+const isSkipAuth = () => localStorage.getItem("skip_auth") === "true";
+
+const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 14 }, (_, i) => ({
+  energy_level: [65, 55, 70, 45, 60, 50, 75, 80, 60, 55, 70, 85, 72, 68][i],
+  created_at: new Date(Date.now() - (13 - i) * 86400000).toISOString(),
+}));
+
+const DEMO_WEEKLY: WeeklyCheckin[] = [
+  { id: "d1", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Unclear priorities"], week_number: 0, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
+  { id: "d2", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Recruiting pressure"], week_number: 1, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+  { id: "d3", stress_level: 2, control_level: 4, confidence_level: 4, stress_causes: ["Admin / logistics"], week_number: 2, created_at: new Date().toISOString() },
+];
+
 // ─── Hooks ───────────────────────────────────────────────────────
 const useDailyCheckins = () => {
   const { user } = useAuth();
+  const skipAuth = isSkipAuth();
   return useQuery({
-    queryKey: ["wellbeing_daily", user?.id],
+    queryKey: ["wellbeing_daily", user?.id ?? "demo"],
     queryFn: async () => {
+      if (skipAuth && !user) return DEMO_DAILY;
       const { data, error } = await supabase
         .from("wellbeing_checkins")
         .select("energy_level, created_at")
@@ -52,15 +68,17 @@ const useDailyCheckins = () => {
       if (error) throw error;
       return data as DailyCheckin[];
     },
-    enabled: !!user,
+    enabled: !!user || skipAuth,
   });
 };
 
 const useWeeklyCheckins = () => {
   const { user } = useAuth();
+  const skipAuth = isSkipAuth();
   return useQuery({
-    queryKey: ["wellbeing_weekly", user?.id],
+    queryKey: ["wellbeing_weekly", user?.id ?? "demo"],
     queryFn: async () => {
+      if (skipAuth && !user) return DEMO_WEEKLY;
       const { data, error } = await (supabase as any)
         .from("weekly_checkins")
         .select("*")
@@ -69,7 +87,7 @@ const useWeeklyCheckins = () => {
       if (error) throw error;
       return data as WeeklyCheckin[];
     },
-    enabled: !!user,
+    enabled: !!user || skipAuth,
   });
 };
 

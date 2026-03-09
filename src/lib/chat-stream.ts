@@ -17,18 +17,24 @@ export async function streamChat({
   onError: (error: string) => void;
 }) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const skipAuth = localStorage.getItem("skip_auth") === "true";
+
+  if (!session && !skipAuth) {
     onError("Please sign in to use the chatbot.");
     return;
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  };
+  if (session) {
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    },
+    headers,
     body: JSON.stringify({ messages, sessionId }),
   });
 
