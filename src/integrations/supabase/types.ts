@@ -14,6 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_analytics: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_fallback: boolean
+          role: string
+          session_id: string
+          sources: Json | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_fallback?: boolean
+          role: string
+          session_id: string
+          sources?: Json | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_fallback?: boolean
+          role?: string
+          session_id?: string
+          sources?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      knowledge_sources: {
+        Row: {
+          content: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at: string
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          tags: string[]
+          title: string
+          updated_at: string
+          url: string | null
+          week_relevant: number | null
+        }
+        Insert: {
+          content: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          tags?: string[]
+          title: string
+          updated_at?: string
+          url?: string | null
+          week_relevant?: number | null
+        }
+        Update: {
+          content?: string
+          content_type?: Database["public"]["Enums"]["content_type"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          url?: string | null
+          week_relevant?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -73,7 +204,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_type:
+        | "faq"
+        | "deadline"
+        | "contact"
+        | "policy"
+        | "link"
+        | "milestone"
+        | "weekly_guidance"
+        | "resource"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -200,6 +339,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      content_type: [
+        "faq",
+        "deadline",
+        "contact",
+        "policy",
+        "link",
+        "milestone",
+        "weekly_guidance",
+        "resource",
+      ],
+    },
   },
 } as const
