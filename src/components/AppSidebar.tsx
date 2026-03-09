@@ -3,7 +3,7 @@ import {
   MessageSquare,
   BookOpen,
   Heart,
-  Shield,
+  FileText,
   Compass,
   LogOut,
 } from "lucide-react";
