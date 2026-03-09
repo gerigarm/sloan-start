@@ -103,9 +103,9 @@ export async function trackChatEvent(event: string, metadata: Record<string, unk
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.from("chat_analytics").insert({
+  await supabase.from("chat_analytics").insert([{
     user_id: user.id,
     event,
     metadata,
-  });
+  }]);
 }
