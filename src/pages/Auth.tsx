@@ -121,6 +121,14 @@ const Auth = () => {
             )}
           </CardContent>
         </Card>
+
+        <Button
+          variant="ghost"
+          className="w-full text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/dashboard")}
+        >
+          Skip for now →
+        </Button>
       </div>
     </div>
   );
