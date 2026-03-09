@@ -27,7 +27,7 @@ import {
 
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Ask Compass", url: "/chat", icon: MessageSquare },
+  { title: "Ask 6W", url: "/chat", icon: MessageSquare },
   { title: "Resources", url: "/resources", icon: BookOpen },
   { title: "My Wellbeing", url: "/wellbeing", icon: Heart },
 ];
