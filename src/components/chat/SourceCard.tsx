@@ -32,7 +32,7 @@ export function SourceCard({ source }: { source: SourceRef }) {
       href={source.url || undefined}
       target={source.url ? "_blank" : undefined}
       rel="noopener noreferrer"
-      className={`flex items-center gap-1.5 rounded border border-border bg-muted/40 px-2 py-1 text-[10px] transition-colors ${
+      className={`flex items-center gap-1.5 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[7px] transition-colors ${
         source.url ? "hover:bg-accent cursor-pointer" : "cursor-default"
       }`}
     >
