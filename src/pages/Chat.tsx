@@ -7,7 +7,7 @@ const Chat = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <div className="mb-4">
-        <h1 className="font-serif text-3xl text-foreground">Ask Compass</h1>
+        <h1 className="font-serif text-3xl text-foreground">Ask 6W</h1>
         <p className="text-muted-foreground mt-1">Get answers grounded in real Sloan information</p>
       </div>
 
