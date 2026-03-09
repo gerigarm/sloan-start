@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle } from "lucide-react";
 import JourneyGraph from "@/components/JourneyGraph";
+import { DashboardChatWidget } from "@/components/chat/DashboardChatWidget";
 
 const Dashboard = () => {
   return (
