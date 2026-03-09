@@ -19,7 +19,7 @@ const Landing = () => {
       <header className="flex items-center justify-between px-6 py-4 md:px-12">
         <div className="flex items-center gap-2">
           <Compass className="h-6 w-6 text-primary" />
-          <span className="font-serif text-xl text-foreground">Sloan Compass</span>
+          <span className="font-serif text-xl text-foreground">Sloan 6W</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
           Sign in
