@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Check, X } from "lucide-react";
+import { Zap, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -18,13 +18,12 @@ const getEnergyInfo = (value: number) =>
 
 const EnergyBar = () => {
   const [energy, setEnergy] = useState(50);
-  const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastCheckin, setLastCheckin] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Check if user already checked in today
   useEffect(() => {
     if (!user) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -57,98 +56,119 @@ const EnergyBar = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setLastCheckin(new Date().toISOString().slice(0, 10));
-      setIsOpen(false);
       toast({ title: `${info.emoji} Logged!`, description: info.label });
     }
   };
 
-  // Color based on energy
-  const hue = Math.round((energy / 100) * 120); // 0=red, 120=green
+  const hue = Math.round((energy / 100) * 120);
+  const showBanner = !alreadyCheckedIn && !dismissed;
 
   return (
-    <div className="relative">
-      {!alreadyCheckedIn ? (
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-xs font-medium text-foreground"
+    <>
+      {/* Persistent bouncing nudge in header when not checked in */}
+      {!alreadyCheckedIn && (
+        <motion.div
+          animate={{ y: [0, -6, 0] }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+          className="flex items-center gap-1.5 text-xs font-medium text-warning cursor-default"
         >
-          <Zap className="h-3.5 w-3.5 text-warning" />
-          <span className="hidden sm:inline">How's your energy?</span>
-          <span className="sm:hidden">Check in</span>
-        </button>
-      ) : (
+          <Zap className="h-4 w-4" />
+          <span className="hidden sm:inline">Log your energy!</span>
+        </motion.div>
+      )}
+
+      {alreadyCheckedIn && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground">
           <Check className="h-3.5 w-3.5 text-success" />
           <span className="hidden sm:inline">Checked in today</span>
         </div>
       )}
 
+      {/* Full-width banner below header */}
       <AnimatePresence>
-        {isOpen && (
+        {showBanner && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 z-50 w-72 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-elevated)]"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-14 left-0 right-0 z-40 overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-foreground">Energy check-in</span>
-              <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <div className="bg-card border-b border-border shadow-[var(--shadow-elevated)]">
+              <div className="max-w-xl mx-auto px-4 py-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, -10, 0] }}
+                      transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
+                    >
+                      <Zap className="h-5 w-5 text-warning" />
+                    </motion.div>
+                    <span className="text-sm font-medium text-foreground">
+                      How's your energy today?
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setDismissed(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Later
+                  </button>
+                </div>
 
-            <div className="space-y-3">
-              <div className="text-center">
-                <span className="text-3xl">{info.emoji}</span>
-                <p className="text-sm text-foreground font-medium mt-1">{info.label}</p>
+                <div className="text-center">
+                  <motion.span
+                    key={info.emoji}
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}
+                    className="text-4xl inline-block"
+                  >
+                    {info.emoji}
+                  </motion.span>
+                  <p className="text-sm text-foreground font-medium mt-1">{info.label}</p>
+                </div>
+
+                <div className="relative px-1">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={energy}
+                    onChange={(e) => setEnergy(Number(e.target.value))}
+                    className="w-full h-3 rounded-full appearance-none cursor-pointer outline-none
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7
+                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2
+                      [&::-webkit-slider-thumb]:border-card [&::-webkit-slider-thumb]:shadow-lg
+                      [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing
+                      [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7
+                      [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2
+                      [&::-moz-range-thumb]:border-card [&::-moz-range-thumb]:shadow-lg
+                      [&::-moz-range-thumb]:cursor-grab"
+                    style={{
+                      background: `linear-gradient(to right, hsl(0, 70%, 55%), hsl(45, 90%, 55%), hsl(120, 55%, 45%))`,
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+                  <span>😴 Empty</span>
+                  <span>Charged ⚡</span>
+                </div>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium
+                    hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {submitting ? "Saving…" : "Log it ✓"}
+                </button>
               </div>
-
-              {/* Custom slider track */}
-              <div className="relative px-1">
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={energy}
-                  onChange={(e) => setEnergy(Number(e.target.value))}
-                  className="w-full h-3 rounded-full appearance-none cursor-pointer outline-none
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2
-                    [&::-webkit-slider-thumb]:border-card [&::-webkit-slider-thumb]:shadow-md
-                    [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing
-                    [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
-                    [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2
-                    [&::-moz-range-thumb]:border-card [&::-moz-range-thumb]:shadow-md
-                    [&::-moz-range-thumb]:cursor-grab"
-                  style={{
-                    background: `linear-gradient(to right, hsl(0, 70%, 55%), hsl(45, 90%, 55%), hsl(120, 55%, 45%))`,
-                    // Thumb color
-                    // @ts-ignore
-                    "--thumb-color": `hsl(${hue}, 65%, 50%)`,
-                  }}
-                />
-              </div>
-
-              <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                <span>Empty</span>
-                <span>Charged</span>
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium
-                  hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {submitting ? "Saving…" : "Log it ✓"}
-              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 };
 
