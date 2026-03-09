@@ -42,7 +42,13 @@ const EnergyBar = () => {
   const info = getEnergyInfo(energy);
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      // Skip mode: just dismiss the banner
+      setCheckedInToday(true);
+      setShowSlider(false);
+      toast({ title: `${info.emoji} Logged!`, description: info.label });
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("wellbeing_checkins").insert({
       user_id: user.id,
