@@ -68,18 +68,12 @@ const Wellbeing = () => {
     : 0;
   const weeksIn = Math.min(Math.floor(daysSinceStart / 7), 6);
 
-  // Group checkins by day for the graph
-  const dailyData = checkins.reduce<{ date: string; avg: number; count: number }[]>((acc, c) => {
-    const date = c.created_at.slice(0, 10);
-    const existing = acc.find((d) => d.date === date);
-    if (existing) {
-      existing.avg = (existing.avg * existing.count + c.energy_level) / (existing.count + 1);
-      existing.count++;
-    } else {
-      acc.push({ date, avg: c.energy_level, count: 1 });
-    }
-    return acc;
-  }, []);
+  // Show every individual log
+  const allLogs = checkins.map((c) => ({
+    energy: c.energy_level,
+    date: c.created_at.slice(0, 10),
+    time: new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  }));
 
   const randomEncouragement = encouragements[totalCheckins % encouragements.length];
 
@@ -130,28 +124,28 @@ const Wellbeing = () => {
       {/* Energy graph */}
       <Card className="shadow-[var(--shadow-card)]">
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="font-sans text-sm">Energy over time</CardTitle>
+          <CardTitle className="font-sans text-sm">All check-ins</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
-          {dailyData.length > 1 ? (
-            <div className="h-32 flex items-end gap-[2px]">
-              {dailyData.map((d, i) => {
-                const hue = Math.round((d.avg / 100) * 120);
+          {allLogs.length > 1 ? (
+            <div className="h-36 flex items-end gap-[2px]">
+              {allLogs.map((d, i) => {
+                const hue = Math.round((d.energy / 100) * 120);
                 return (
                   <motion.div
-                    key={d.date}
+                    key={`${d.date}-${d.time}-${i}`}
                     initial={{ height: 0 }}
-                    animate={{ height: `${d.avg}%` }}
-                    transition={{ delay: i * 0.03, duration: 0.4 }}
-                    className="flex-1 rounded-t-sm min-w-[4px]"
+                    animate={{ height: `${d.energy}%` }}
+                    transition={{ delay: i * 0.02, duration: 0.4 }}
+                    className="flex-1 rounded-t-sm min-w-[3px] max-w-[12px]"
                     style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
-                    title={`${d.date}: ${Math.round(d.avg)}%`}
+                    title={`${d.date} ${d.time}: ${d.energy}%`}
                   />
                 );
               })}
             </div>
           ) : (
-            <div className="h-32 flex items-center justify-center text-sm text-muted-foreground">
+            <div className="h-36 flex items-center justify-center text-sm text-muted-foreground">
               {totalCheckins === 0
                 ? "Check in using the energy bar above to start tracking"
                 : "One more check-in to see your graph"}
