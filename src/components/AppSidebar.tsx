@@ -5,9 +5,12 @@ import {
   Heart,
   Shield,
   Compass,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +40,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -89,8 +93,30 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        {!collapsed && (
-          <p className="text-xs text-muted-foreground">MIT Sloan · 2025</p>
+        {!collapsed ? (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-muted-foreground"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         )}
       </SidebarFooter>
     </Sidebar>
