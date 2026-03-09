@@ -32,16 +32,14 @@ export function SourceCard({ source }: { source: SourceRef }) {
       href={source.url || undefined}
       target={source.url ? "_blank" : undefined}
       rel="noopener noreferrer"
-      className={`flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs transition-colors ${
+      className={`flex items-center gap-1.5 rounded border border-border bg-muted/40 px-2 py-1 text-[10px] transition-colors ${
         source.url ? "hover:bg-accent cursor-pointer" : "cursor-default"
       }`}
     >
-      <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-foreground truncate">{source.title}</p>
-        <p className="text-muted-foreground">{label}</p>
-      </div>
-      {source.url && <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />}
+      <Icon className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+      <span className="text-muted-foreground truncate">{source.title}</span>
+      <span className="text-muted-foreground/60 shrink-0">· {label}</span>
+      {source.url && <ExternalLink className="h-2 w-2 text-muted-foreground/50 shrink-0" />}
     </a>
   );
 }

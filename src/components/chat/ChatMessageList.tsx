@@ -34,7 +34,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
           {isUser ? (
             <p>{message.content}</p>
           ) : (
-            <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary">
+            <div className="chat-markdown prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-h1:text-lg prose-h1:font-semibold prose-h1:mt-3 prose-h1:mb-1 prose-h2:text-base prose-h2:font-semibold prose-h2:mt-2.5 prose-h2:mb-1 prose-h3:text-[0.9rem] prose-h3:font-medium prose-h3:mt-2 prose-h3:mb-0.5 prose-p:text-[13px] prose-p:leading-relaxed prose-li:text-[13px] prose-li:leading-relaxed">
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           )}
