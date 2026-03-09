@@ -99,13 +99,13 @@ export async function streamChat({
 }
 
 // Analytics helper
-export async function trackChatEvent(event: string, metadata: Record<string, unknown> = {}) {
+export async function trackChatEvent(event: string, metadata: Record<string, string> = {}) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
   await supabase.from("chat_analytics").insert([{
     user_id: user.id,
     event,
-    metadata,
+    metadata: metadata as any,
   }]);
 }
