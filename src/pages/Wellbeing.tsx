@@ -65,7 +65,7 @@ const useDailyCheckins = () => {
   return useQuery({
     queryKey: ["wellbeing_daily", user?.id ?? "demo"],
     queryFn: async () => {
-      if (skipAuth && !user) return DEMO_DAILY;
+      if (skipAuth) return DEMO_DAILY;
       const { data, error } = await supabase
         .from("wellbeing_checkins")
         .select("energy_level, created_at")
