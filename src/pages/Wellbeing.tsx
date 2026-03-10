@@ -41,15 +41,23 @@ const CHATBOT_PROMPTS = [
 // ─── Demo data for skip-auth mode ────────────────────────────────
 const isSkipAuth = () => localStorage.getItem("skip_auth") === "true";
 
-const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 14 }, (_, i) => ({
-  energy_level: [65, 55, 70, 45, 60, 50, 75, 80, 60, 55, 70, 85, 72, 68][i],
-  created_at: new Date(Date.now() - (13 - i) * 86400000).toISOString(),
+const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 28 }, (_, i) => ({
+  energy_level: [
+    40, 55, 50, 35, 60, 65, 58,
+    45, 70, 62, 48, 55, 72, 68,
+    75, 60, 80, 55, 65, 78, 82,
+    70, 85, 72, 68, 90, 76, 74,
+  ][i],
+  created_at: new Date(Date.now() - (27 - i) * 86400000).toISOString(),
 }));
 
 const DEMO_WEEKLY: WeeklyCheckin[] = [
-  { id: "d1", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Unclear priorities"], week_number: 0, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
-  { id: "d2", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Recruiting pressure"], week_number: 1, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
-  { id: "d3", stress_level: 2, control_level: 4, confidence_level: 4, stress_causes: ["Admin / logistics"], week_number: 2, created_at: new Date().toISOString() },
+  { id: "d1", stress_level: 5, control_level: 1, confidence_level: 2, stress_causes: ["Too many deadlines", "Unclear priorities", "Family / relocation"], week_number: 0, created_at: new Date(Date.now() - 35 * 86400000).toISOString() },
+  { id: "d2", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Recruiting pressure"], week_number: 1, created_at: new Date(Date.now() - 28 * 86400000).toISOString() },
+  { id: "d3", stress_level: 4, control_level: 3, confidence_level: 3, stress_causes: ["Recruiting pressure", "Too many events"], week_number: 2, created_at: new Date(Date.now() - 21 * 86400000).toISOString() },
+  { id: "d4", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Admin / logistics"], week_number: 3, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
+  { id: "d5", stress_level: 2, control_level: 4, confidence_level: 4, stress_causes: ["Unclear priorities"], week_number: 4, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+  { id: "d6", stress_level: 2, control_level: 4, confidence_level: 5, stress_causes: [], week_number: 5, created_at: new Date().toISOString() },
 ];
 
 // ─── Hooks ───────────────────────────────────────────────────────
