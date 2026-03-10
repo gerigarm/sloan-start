@@ -55,7 +55,8 @@ const Admin = () => {
 
   useEffect(() => { fetchItems(); }, []);
 
-  const filteredItems = items.filter((i) => i.content_type === activeTab);
+  const activeTabDef = TABS.find((t) => t.value === activeTab)!;
+  const filteredItems = items.filter((i) => activeTabDef.types.includes(i.content_type));
 
   const handleSave = async () => {
     if (!editing?.title || !editing?.content) {
