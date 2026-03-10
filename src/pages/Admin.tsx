@@ -25,15 +25,13 @@ interface KnowledgeSource {
   updated_at: string;
 }
 
-const TABS: { value: ContentType; label: string }[] = [
-  { value: "milestone", label: "Milestones" },
-  { value: "resource", label: "Resources" },
-  { value: "policy", label: "Policies" },
-  { value: "faq", label: "FAQs" },
-  { value: "contact", label: "Contacts" },
-  { value: "deadline", label: "Deadlines" },
-  { value: "link", label: "Links" },
-  { value: "weekly_guidance", label: "Weekly Guidance" },
+type TabDef = { value: string; label: string; types: ContentType[] };
+
+const TABS: TabDef[] = [
+  { value: "milestones", label: "Milestones & Deadlines", types: ["milestone", "deadline"] },
+  { value: "resources", label: "Resources", types: ["resource", "link", "policy"] },
+  { value: "faq", label: "FAQs", types: ["faq"] },
+  { value: "contact", label: "Contacts", types: ["contact"] },
 ];
 
 const TAG_OPTIONS = ["international", "family", "entrepreneur", "recruiting", "academics", "relocation"];
@@ -41,7 +39,7 @@ const TAG_OPTIONS = ["international", "family", "entrepreneur", "recruiting", "a
 const Admin = () => {
   const [items, setItems] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ContentType>("milestone");
+  const [activeTab, setActiveTab] = useState("milestones");
   const [editing, setEditing] = useState<Partial<KnowledgeSource> | null>(null);
   const { toast } = useToast();
 
@@ -57,7 +55,8 @@ const Admin = () => {
 
   useEffect(() => { fetchItems(); }, []);
 
-  const filteredItems = items.filter((i) => i.content_type === activeTab);
+  const activeTabDef = TABS.find((t) => t.value === activeTab)!;
+  const filteredItems = items.filter((i) => activeTabDef.types.includes(i.content_type));
 
   const handleSave = async () => {
     if (!editing?.title || !editing?.content) {
@@ -68,7 +67,7 @@ const Admin = () => {
     const record = {
       title: editing.title,
       content: editing.content,
-      content_type: activeTab,
+      content_type: editing.content_type || activeTabDef.types[0],
       url: editing.url || null,
       tags: editing.tags || [],
       week_relevant: editing.week_relevant ?? null,
@@ -120,7 +119,7 @@ const Admin = () => {
             <TabsTrigger key={t.value} value={t.value} className="text-xs">
               {t.label}
               <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
-                {items.filter((i) => i.content_type === t.value).length}
+                {items.filter((i) => t.types.includes(i.content_type)).length}
               </Badge>
             </TabsTrigger>
           ))}
@@ -134,7 +133,7 @@ const Admin = () => {
               </p>
               <Button
                 size="sm"
-                onClick={() => setEditing({ content_type: activeTab, tags: [], is_active: true })}
+                onClick={() => setEditing({ content_type: activeTabDef.types[0], tags: [], is_active: true })}
                 className="text-xs h-8"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add {tab.label.slice(0, -1)}
