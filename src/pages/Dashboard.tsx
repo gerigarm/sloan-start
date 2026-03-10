@@ -177,6 +177,8 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-5">
+      <EnergyBar />
+
       <div>
         <h1 className="font-serif text-3xl text-foreground">Your Week</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
