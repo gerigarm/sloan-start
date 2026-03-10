@@ -25,15 +25,13 @@ interface KnowledgeSource {
   updated_at: string;
 }
 
-const TABS: { value: ContentType; label: string }[] = [
-  { value: "milestone", label: "Milestones" },
-  { value: "resource", label: "Resources" },
-  { value: "policy", label: "Policies" },
-  { value: "faq", label: "FAQs" },
-  { value: "contact", label: "Contacts" },
-  { value: "deadline", label: "Deadlines" },
-  { value: "link", label: "Links" },
-  { value: "weekly_guidance", label: "Weekly Guidance" },
+type TabDef = { value: string; label: string; types: ContentType[] };
+
+const TABS: TabDef[] = [
+  { value: "milestones", label: "Milestones & Deadlines", types: ["milestone", "deadline"] },
+  { value: "resources", label: "Resources", types: ["resource", "link", "policy"] },
+  { value: "faq", label: "FAQs", types: ["faq"] },
+  { value: "contact", label: "Contacts", types: ["contact"] },
 ];
 
 const TAG_OPTIONS = ["international", "family", "entrepreneur", "recruiting", "academics", "relocation"];
