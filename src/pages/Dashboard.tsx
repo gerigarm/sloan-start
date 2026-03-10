@@ -164,10 +164,10 @@ const Dashboard = () => {
 
   // Dummy deadlines when none from DB
   const dummyDeadlines = [
-    { title: "Housing application due", date: "Mar 15" },
-    { title: "Health insurance enrollment", date: "Mar 20" },
-    { title: "Course registration opens", date: "Mar 25" },
-    { title: "IT account setup deadline", date: "Apr 1" },
+    { title: "Health Insurance Enrollment", date: "Mar 14" },
+    { title: "Financial aid documents due", date: "Mar 18" },
+    { title: "International Students – ISSO Check-in", date: "Mar 21" },
+    { title: "Course registration deadline", date: "Mar 28" },
   ];
 
   const priorityNotes = (userNotes ?? []).filter((n) => n.category === "priority");
