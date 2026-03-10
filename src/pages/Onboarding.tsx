@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Compass, ArrowRight, ArrowLeft, Check, GraduationCap, Globe, Home, Target, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -84,9 +82,7 @@ const Onboarding = () => {
   const [relocation, setRelocation] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [concerns, setConcerns] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
 
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -101,26 +97,20 @@ const Onboarding = () => {
     return true;
   };
 
-  const handleFinish = async () => {
-    if (!user) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        student_type: studentType,
-        is_international: isInternational,
-        relocation_status: relocation,
-        primary_goals: goals,
+  const handleFinish = () => {
+    const email = localStorage.getItem("user_email");
+    if (email) {
+      // Store onboarding data locally for prototype
+      localStorage.setItem(`onboarding_done_${email}`, "true");
+      localStorage.setItem(`onboarding_data_${email}`, JSON.stringify({
+        studentType,
+        isInternational,
+        relocation,
+        goals,
         concerns,
-        onboarding_completed: true,
-      } as any)
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast({ title: "Error saving", description: error.message, variant: "destructive" });
-      setSaving(false);
-      return;
+      }));
     }
+    toast({ title: "Welcome aboard!", description: "Your guide is personalized." });
     navigate("/dashboard");
   };
 
@@ -260,10 +250,10 @@ const Onboarding = () => {
             <Button
               size="sm"
               onClick={handleFinish}
-              disabled={!canProceed() || saving}
+              disabled={!canProceed()}
               className="gap-1"
             >
-              <Check className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Finish"}
+              <Check className="h-3.5 w-3.5" /> Finish
             </Button>
           )}
         </div>
