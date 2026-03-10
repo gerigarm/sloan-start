@@ -178,6 +178,8 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-5">
+      <JourneyGraph />
+
       <EnergyBar />
 
       <div>
@@ -189,8 +191,6 @@ const Dashboard = () => {
 
       {/* Personalized nudges */}
       {nudges.length > 0 && <NudgeCard nudges={nudges} />}
-
-      <JourneyGraph />
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-[var(--shadow-card)]">
