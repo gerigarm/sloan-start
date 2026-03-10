@@ -512,17 +512,24 @@ const Wellbeing = () => {
         <CardContent className="px-4 pb-4">
           {dailyData.length > 0 ? (
             <div>
-              <div className="h-32 flex items-end gap-1">
+              <div className="h-32 flex items-end gap-[1px]">
                 {dailyData.map((d, i) => {
+                  if (d.avg === null) {
+                    return (
+                      <div key={d.date} className="flex-1 flex flex-col justify-end items-center h-full">
+                        <div className="w-full rounded-t-sm min-w-[4px] max-w-[14px] mx-auto h-1 bg-muted/40" />
+                      </div>
+                    );
+                  }
                   const hue = Math.round((d.avg / 100) * 120);
-                  const barHeight = Math.round((d.avg / 100) * 128); // 128px = h-32
+                  const barHeight = Math.round((d.avg / 100) * 128);
                   return (
                     <div key={d.date} className="flex-1 flex flex-col justify-end items-center group relative h-full">
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: barHeight }}
-                        transition={{ delay: i * 0.03, duration: 0.3 }}
-                        className="w-full rounded-t-sm min-w-[6px] max-w-[28px] mx-auto"
+                        transition={{ delay: i * 0.02, duration: 0.3 }}
+                        className="w-full rounded-t-sm min-w-[4px] max-w-[14px] mx-auto"
                         style={{ backgroundColor: `hsl(${hue}, 55%, 50%)` }}
                       />
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block
@@ -533,36 +540,15 @@ const Wellbeing = () => {
                   );
                 })}
               </div>
-              {/* Day labels */}
-              <div className="flex gap-1 mt-1">
-                {dailyData.map(d => (
-                  <div key={d.date} className="flex-1 text-center">
-                    <span className="text-[9px] text-muted-foreground">{d.weekDay.charAt(0)}</span>
+              {/* Week labels: W-2 through W6 */}
+              <div className="flex mt-1 border-t border-border pt-1">
+                {["W-2", "W-1", "Start", "W1", "W2", "W3", "W4", "W5", "W6"].map((label, i) => (
+                  <div key={label} style={{ flex: i === 0 ? 7 : 7 }} className="text-center">
+                    <span className={`text-[9px] font-medium ${
+                      i <= 2 ? "text-muted-foreground" : "text-muted-foreground/40"
+                    }`}>{label}</span>
                   </div>
                 ))}
-              </div>
-              {/* Week labels */}
-              <div className="flex mt-0.5 border-t border-border pt-1">
-                {(() => {
-                  // Group days into weeks
-                  const weeks: { start: number; count: number; label: string }[] = [];
-                  let weekNum = 1;
-                  let currentWeekStart = 0;
-                  dailyData.forEach((d, i) => {
-                    const dayOfWeek = new Date(d.date).getDay();
-                    if (i > 0 && dayOfWeek === 1) { // Monday = new week
-                      weeks.push({ start: currentWeekStart, count: i - currentWeekStart, label: `W${weekNum}` });
-                      weekNum++;
-                      currentWeekStart = i;
-                    }
-                  });
-                  weeks.push({ start: currentWeekStart, count: dailyData.length - currentWeekStart, label: `W${weekNum}` });
-                  return weeks.map(w => (
-                    <div key={w.label} style={{ flex: w.count }} className="text-center">
-                      <span className="text-[9px] font-medium text-muted-foreground">{w.label}</span>
-                    </div>
-                  ));
-                })()}
               </div>
             </div>
           ) : (
