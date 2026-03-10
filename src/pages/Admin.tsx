@@ -39,7 +39,7 @@ const TAG_OPTIONS = ["international", "family", "entrepreneur", "recruiting", "a
 const Admin = () => {
   const [items, setItems] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ContentType>("milestone");
+  const [activeTab, setActiveTab] = useState("milestones");
   const [editing, setEditing] = useState<Partial<KnowledgeSource> | null>(null);
   const { toast } = useToast();
 
