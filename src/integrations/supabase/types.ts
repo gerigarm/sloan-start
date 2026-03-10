@@ -105,6 +105,7 @@ export type Database = {
       }
       knowledge_sources: {
         Row: {
+          audience_tags: string[]
           content: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string
@@ -114,10 +115,12 @@ export type Database = {
           tags: string[]
           title: string
           updated_at: string
+          urgency: number
           url: string | null
           week_relevant: number | null
         }
         Insert: {
+          audience_tags?: string[]
           content: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string
@@ -127,10 +130,12 @@ export type Database = {
           tags?: string[]
           title: string
           updated_at?: string
+          urgency?: number
           url?: string | null
           week_relevant?: number | null
         }
         Update: {
+          audience_tags?: string[]
           content?: string
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string
@@ -140,8 +145,33 @@ export type Database = {
           tags?: string[]
           title?: string
           updated_at?: string
+          urgency?: number
           url?: string | null
           week_relevant?: number | null
+        }
+        Relationships: []
+      }
+      personalization_events: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }

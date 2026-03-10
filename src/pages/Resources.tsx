@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarClock, ExternalLink, FileText, Users, HelpCircle, Loader2, BookOpen } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { usePersonalization, trackPersonalizationEvent } from "@/hooks/usePersonalization";
+import { rankSources } from "@/lib/personalization";
 
 type KnowledgeSource = Tables<"knowledge_sources">;
 
@@ -31,7 +33,13 @@ const ResourceItem = ({ item }: { item: KnowledgeSource }) => (
       <div className="flex items-center gap-2 flex-wrap">
         <h3 className="text-sm font-medium text-foreground">
           {item.url ? (
-            <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary transition-colors">
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-primary transition-colors"
+              onClick={() => trackPersonalizationEvent("resource_clicked", { source_id: item.id, title: item.title, content_type: item.content_type })}
+            >
               {item.title}
             </a>
           ) : item.title}
@@ -105,7 +113,10 @@ const CombinedResourcesTab = ({ sources, isLoading }: { sources: KnowledgeSource
 
 const Resources = () => {
   const { data: sources, isLoading } = useKnowledgeSources();
-  const allSources = sources ?? [];
+  const { ctx } = usePersonalization();
+
+  // Rank all sources by personalization score
+  const allSources = sources ? rankSources(sources, ctx) : [];
 
   const getItems = (type: string) => allSources.filter((s) => s.content_type === type);
   const getCombinedCount = () => allSources.filter((s) => ["resource", "link", "policy"].includes(s.content_type)).length;
@@ -114,7 +125,7 @@ const Resources = () => {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-3xl text-foreground">Resources</h1>
-        <p className="text-muted-foreground mt-1">Deadlines, links, policies, and contacts in one place</p>
+        <p className="text-muted-foreground mt-1">Deadlines, links, policies, and contacts — ranked by relevance to you</p>
       </div>
 
       <Tabs defaultValue="deadline">
