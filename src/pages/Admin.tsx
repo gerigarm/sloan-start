@@ -221,7 +221,11 @@ const Admin = () => {
             {/* Items list */}
             <div className="space-y-2">
               {filteredItems.map((item) => (
-                <Card key={item.id} className="shadow-[var(--shadow-card)]">
+                <Card
+                  key={item.id}
+                  className="shadow-[var(--shadow-card)] cursor-pointer transition-colors hover:bg-accent/50"
+                  onClick={() => setEditing(item)}
+                >
                   <CardContent className="p-3 flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -241,24 +245,14 @@ const Admin = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setEditing(item)}
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive shrink-0"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
