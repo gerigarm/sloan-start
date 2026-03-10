@@ -84,7 +84,7 @@ const useWeeklyCheckins = () => {
   return useQuery({
     queryKey: ["wellbeing_weekly", user?.id ?? "demo"],
     queryFn: async () => {
-      if (skipAuth && !user) return DEMO_WEEKLY;
+      if (skipAuth) return DEMO_WEEKLY;
       const { data, error } = await (supabase as any)
         .from("weekly_checkins")
         .select("*")
