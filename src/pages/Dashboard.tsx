@@ -164,10 +164,10 @@ const Dashboard = () => {
 
   // Dummy deadlines when none from DB
   const dummyDeadlines = [
-    { title: "Housing application due", date: "Mar 15" },
-    { title: "Health insurance enrollment", date: "Mar 20" },
-    { title: "Course registration opens", date: "Mar 25" },
-    { title: "IT account setup deadline", date: "Apr 1" },
+    { title: "Health Insurance Enrollment", date: "Mar 14" },
+    { title: "Financial aid documents due", date: "Mar 18" },
+    { title: "International Students – ISSO Check-in", date: "Mar 21" },
+    { title: "Course registration deadline", date: "Mar 28" },
   ];
 
   const priorityNotes = (userNotes ?? []).filter((n) => n.category === "priority");
@@ -225,31 +225,20 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {isLoading ? <Loading /> : deadlines.length > 0 ? (
+            {isLoading ? <Loading /> : (
               <ul className="space-y-1.5">
-                {deadlines.slice(0, 4).map((item) => (
-                  <li key={item.id} className="text-xs text-foreground flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-1.5">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
-                      <span>{item.title}</span>
-                    </div>
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      {item.metadata && typeof item.metadata === "object" && "date" in item.metadata
-                        ? String((item.metadata as Record<string, unknown>).date)
-                        : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="space-y-1.5">
-                {dummyDeadlines.map((d) => (
+                {(deadlines.length > 0 ? deadlines.slice(0, 4).map((item, i) => ({
+                  title: item.title,
+                  date: item.metadata && typeof item.metadata === "object" && "date" in item.metadata
+                    ? String((item.metadata as Record<string, unknown>).date)
+                    : dummyDeadlines[i]?.date ?? "",
+                })) : dummyDeadlines).map((d) => (
                   <li key={d.title} className="text-xs text-foreground flex items-start justify-between gap-2">
                     <div className="flex items-start gap-1.5">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                       <span>{d.title}</span>
                     </div>
-                    <span className="text-muted-foreground whitespace-nowrap">{d.date}</span>
+                    <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">{d.date}</span>
                   </li>
                 ))}
               </ul>
