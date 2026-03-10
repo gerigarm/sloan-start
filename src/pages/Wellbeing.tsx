@@ -560,69 +560,83 @@ const Wellbeing = () => {
       </Card>
 
       {/* ─── 5. Wellbeing Progress Over Time ──────────────── */}
-      {weeklyCheckins && weeklyCheckins.length > 0 && (
-        <Card className="shadow-[var(--shadow-card)]">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="font-sans text-sm flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-primary" />
-              Progress Over Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-4">
-            {/* Full-width trend chart */}
-            <div className="relative">
-              <svg viewBox="0 0 300 120" className="w-full h-28" preserveAspectRatio="none">
-                {/* Grid lines */}
-                {[0, 1, 2, 3, 4].map(i => (
-                  <line key={i} x1="0" y1={i * 30} x2="300" y2={i * 30} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4 4" />
-                ))}
-                {/* Stress line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(0, 60%, 55%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={stressTrend.map((v, i) => `${(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Control line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(200, 60%, 50%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={controlTrend.map((v, i) => `${(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Confidence line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(150, 55%, 45%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={confidenceTrend.map((v, i) => `${(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Data point dots */}
-                {stressTrend.map((v, i) => (
-                  <circle key={`s${i}`} cx={(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(0, 60%, 55%)" />
-                ))}
-                {controlTrend.map((v, i) => (
-                  <circle key={`c${i}`} cx={(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(200, 60%, 50%)" />
-                ))}
-                {confidenceTrend.map((v, i) => (
-                  <circle key={`cf${i}`} cx={(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(150, 55%, 45%)" />
-                ))}
-              </svg>
-              {/* Week labels */}
-              <div className="flex justify-between px-2 mt-1">
-                {weeklyCheckins.map((w, i) => (
-                  <span key={w.id} className="text-[10px] text-muted-foreground">W{(w.week_number ?? i) + 1}</span>
-                ))}
-              </div>
-            </div>
+      <Card className="shadow-[var(--shadow-card)]">
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="font-sans text-sm flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            Progress Over Time
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 space-y-4">
+          {/* Full 8-week timeline chart */}
+          {(() => {
+            const TOTAL_WEEKS = 8; // W-2 through W5 (indexes 0-7)
+            const weekLabels = ["W-2", "W-1", "Start", "W1", "W2", "W3", "W4", "W5"];
+            const chartW = 300;
+            const chartH = 120;
+            const pad = 10;
+            const usableW = chartW - pad * 2;
 
-            {/* Legend with current values */}
+            // Map week_number to x position: week_number 0 = W-2 (index 0)
+            const getX = (weekIdx: number) => pad + (weekIdx / (TOTAL_WEEKS - 1)) * usableW;
+            const getY = (val: number) => chartH - (val / 5) * 100;
+
+            // Map each checkin to its position on the 8-week timeline
+            const dataPoints = (weeklyCheckins ?? []).map((w, i) => ({
+              ...w,
+              weekIdx: w.week_number ?? i, // week_number 0 = first week = W-2
+            }));
+
+            const makePoints = (accessor: (w: WeeklyCheckin & { weekIdx: number }) => number) =>
+              dataPoints.map(w => `${getX(w.weekIdx)},${getY(accessor(w))}`).join(" ");
+
+            return (
+              <div className="relative">
+                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-28" preserveAspectRatio="none">
+                  {/* Grid lines */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <line key={i} x1="0" y1={i * 30} x2={chartW} y2={i * 30} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4 4" />
+                  ))}
+                  {/* Vertical week markers (faded for future) */}
+                  {weekLabels.map((_, i) => (
+                    <line key={`vl${i}`} x1={getX(i)} y1="0" x2={getX(i)} y2={chartH} stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 4" />
+                  ))}
+                  {dataPoints.length >= 2 && (
+                    <>
+                      <polyline fill="none" stroke="hsl(0, 60%, 55%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.stress_level)} />
+                      <polyline fill="none" stroke="hsl(200, 60%, 50%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.control_level)} />
+                      <polyline fill="none" stroke="hsl(150, 55%, 45%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.confidence_level)} />
+                    </>
+                  )}
+                  {/* Data dots */}
+                  {dataPoints.map((w, i) => (
+                    <g key={w.id}>
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.stress_level)} r="3" fill="hsl(0, 60%, 55%)" />
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.control_level)} r="3" fill="hsl(200, 60%, 50%)" />
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.confidence_level)} r="3" fill="hsl(150, 55%, 45%)" />
+                    </g>
+                  ))}
+                </svg>
+                {/* Week labels */}
+                <div className="flex justify-between px-1 mt-1">
+                  {weekLabels.map((label, i) => {
+                    const hasData = dataPoints.some(d => d.weekIdx === i);
+                    return (
+                      <span key={label} className={`text-[10px] ${hasData ? "text-muted-foreground font-medium" : "text-muted-foreground/40"}`}>
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Legend with current values */}
+          {weeklyCheckins && weeklyCheckins.length > 0 && (
             <div className="flex items-center gap-4 text-xs">
               {[
                 { label: "Stress", data: stressTrend, color: "hsl(0, 60%, 55%)", inverted: true },
@@ -647,9 +661,9 @@ const Wellbeing = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* ─── 6. Chatbot Shortcuts ─────────────────────────── */}
       <Card className="shadow-[var(--shadow-card)]">
