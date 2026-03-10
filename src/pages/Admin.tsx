@@ -67,7 +67,7 @@ const Admin = () => {
     const record = {
       title: editing.title,
       content: editing.content,
-      content_type: activeTab,
+      content_type: editing.content_type || activeTabDef.types[0],
       url: editing.url || null,
       tags: editing.tags || [],
       week_relevant: editing.week_relevant ?? null,
