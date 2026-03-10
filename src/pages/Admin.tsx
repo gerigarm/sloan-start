@@ -119,7 +119,7 @@ const Admin = () => {
             <TabsTrigger key={t.value} value={t.value} className="text-xs">
               {t.label}
               <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
-                {items.filter((i) => i.content_type === t.value).length}
+                {items.filter((i) => t.types.includes(i.content_type)).length}
               </Badge>
             </TabsTrigger>
           ))}
