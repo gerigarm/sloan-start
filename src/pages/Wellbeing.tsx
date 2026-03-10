@@ -41,16 +41,12 @@ const CHATBOT_PROMPTS = [
 // ─── Demo data for skip-auth mode ────────────────────────────────
 const isSkipAuth = () => localStorage.getItem("skip_auth") === "true";
 
-const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 42 }, (_, i) => ({
+const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 14 }, (_, i) => ({
   energy_level: [
-    30, 45, 40, 35, 50, 55, 42,
-    48, 55, 50, 60, 52, 58, 45,
-    55, 62, 58, 65, 60, 70, 55,
-    60, 68, 72, 65, 75, 70, 62,
-    70, 78, 72, 80, 75, 82, 68,
-    75, 85, 80, 78, 88, 82, 90,
+    45, 60, 55, 70, 50, 65, 75,
+    60, 80, 55, 72, 68, 85, 78,
   ][i],
-  created_at: new Date(Date.now() - (41 - i) * 86400000).toISOString(),
+  created_at: new Date(Date.now() - (13 - i) * 86400000).toISOString(),
 }));
 
 const DEMO_WEEKLY: WeeklyCheckin[] = [
@@ -504,7 +500,7 @@ const Wellbeing = () => {
         <CardContent className="px-4 pb-4">
           {dailyData.length > 0 ? (
             <div>
-              <div className="h-32 flex items-end gap-[2px]">
+              <div className="h-32 flex items-end gap-1">
                 {dailyData.map((d, i) => {
                   const hue = Math.round((d.avg / 100) * 120);
                   return (
@@ -512,23 +508,22 @@ const Wellbeing = () => {
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: `${d.avg}%` }}
-                        transition={{ delay: i * 0.015, duration: 0.3 }}
-                        className="w-full rounded-t-sm min-w-[3px] mx-auto"
+                        transition={{ delay: i * 0.03, duration: 0.3 }}
+                        className="w-full rounded-t-sm min-w-[6px] max-w-[28px] mx-auto"
                         style={{ backgroundColor: `hsl(${hue}, 55%, 50%)` }}
                       />
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block
                         bg-foreground text-background text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
-                        {d.avg}% · {d.weekDay}
+                        {d.avg}%
                       </div>
                     </div>
                   );
                 })}
               </div>
-              {/* Show week labels instead of every day */}
-              <div className="flex mt-1.5 border-t border-border pt-1">
-                {Array.from({ length: 6 }, (_, w) => (
-                  <div key={w} className="flex-1 text-center">
-                    <span className="text-[9px] text-muted-foreground font-medium">W{w + 1}</span>
+              <div className="flex gap-1 mt-1">
+                {dailyData.map(d => (
+                  <div key={d.date} className="flex-1 text-center">
+                    <span className="text-[9px] text-muted-foreground">{d.weekDay}</span>
                   </div>
                 ))}
               </div>
