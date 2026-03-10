@@ -41,12 +41,16 @@ const CHATBOT_PROMPTS = [
 // ─── Demo data for skip-auth mode ────────────────────────────────
 const isSkipAuth = () => localStorage.getItem("skip_auth") === "true";
 
-const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 14 }, (_, i) => ({
+const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 42 }, (_, i) => ({
   energy_level: [
     45, 60, 55, 70, 50, 65, 75,
     60, 80, 55, 72, 68, 85, 78,
+    65, 72, 80, 68, 75, 82, 70,
+    74, 85, 78, 82, 76, 88, 80,
+    78, 85, 72, 90, 82, 88, 76,
+    80, 92, 85, 78, 90, 88, 95,
   ][i],
-  created_at: new Date(Date.now() - (13 - i) * 86400000).toISOString(),
+  created_at: new Date(Date.now() - (41 - i) * 86400000).toISOString(),
 }));
 
 const DEMO_WEEKLY: WeeklyCheckin[] = [
