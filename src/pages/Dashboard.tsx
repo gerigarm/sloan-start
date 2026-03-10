@@ -192,7 +192,7 @@ const Dashboard = () => {
       {/* Personalized nudges */}
       {nudges.length > 0 && <NudgeCard nudges={nudges} />}
 
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
         <Card className="shadow-[var(--shadow-card)]">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="font-sans text-sm flex items-center gap-1.5">
@@ -208,24 +208,6 @@ const Dashboard = () => {
               </ul>
             )}
             <AddNoteInline category="priority" onAdd={handleAdd} />
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-[var(--shadow-card)]">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="font-sans text-sm flex items-center gap-1.5">
-              <Pause className="h-3.5 w-3.5 text-muted-foreground" />
-              What Can Wait
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-2">
-            {isLoading ? <Loading /> : <PanelList items={deferred} emptyText="Nothing deferred" />}
-            {deferredNotes.length > 0 && (
-              <ul className="space-y-1.5 border-t border-border pt-2">
-                {deferredNotes.map((n) => <NoteItem key={n.id} note={n} onToggle={handleToggle} />)}
-              </ul>
-            )}
-            <AddNoteInline category="deferred" onAdd={handleAdd} />
           </CardContent>
         </Card>
 
