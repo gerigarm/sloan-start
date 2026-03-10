@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle, Loader2, Plus, Check, X } from "lucide-react";
+import { CalendarClock, ExternalLink, Flag, MessageCircle, Loader2, Plus, Check, X } from "lucide-react";
 import JourneyGraph from "@/components/JourneyGraph";
 import EnergyBar from "@/components/EnergyBar";
 import { DashboardChatWidget } from "@/components/chat/DashboardChatWidget";
