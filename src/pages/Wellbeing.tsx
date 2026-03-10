@@ -310,21 +310,33 @@ const Wellbeing = () => {
 
   const latestWeekly = weeklyCheckins?.length ? weeklyCheckins[weeklyCheckins.length - 1] : null;
 
-  // Daily chart data
+  // Daily chart data — full 56-day (8-week) timeline
   const dailyData = useMemo(() => {
-    if (!dailyCheckins?.length) return [];
-    const grouped: Record<string, { total: number; count: number }> = {};
-    dailyCheckins.forEach(c => {
+    // Build a lookup from actual checkins
+    const checkinMap: Record<string, number> = {};
+    (dailyCheckins ?? []).forEach(c => {
       const date = c.created_at.slice(0, 10);
-      if (!grouped[date]) grouped[date] = { total: 0, count: 0 };
-      grouped[date].total += c.energy_level;
-      grouped[date].count++;
+      if (!checkinMap[date]) checkinMap[date] = 0;
+      checkinMap[date] += c.energy_level;
     });
-    return Object.entries(grouped).map(([date, { total, count }]) => ({
-      date,
-      avg: Math.round(total / count),
-      weekDay: new Date(date).toLocaleDateString(undefined, { weekday: "short" }),
-    }));
+    const countMap: Record<string, number> = {};
+    (dailyCheckins ?? []).forEach(c => {
+      const date = c.created_at.slice(0, 10);
+      countMap[date] = (countMap[date] ?? 0) + 1;
+    });
+
+    // Generate full 56-day timeline (W-2 through W6)
+    const startDate = new Date(Date.now() - 55 * 86400000); // 56 days ago
+    return Array.from({ length: 56 }, (_, i) => {
+      const d = new Date(startDate.getTime() + i * 86400000);
+      const date = d.toISOString().slice(0, 10);
+      const hasData = checkinMap[date] !== undefined;
+      return {
+        date,
+        avg: hasData ? Math.round(checkinMap[date] / countMap[date]) : null,
+        weekDay: d.toLocaleDateString(undefined, { weekday: "short" }),
+      };
+    });
   }, [dailyCheckins]);
 
   // Trend data for weekly metrics
