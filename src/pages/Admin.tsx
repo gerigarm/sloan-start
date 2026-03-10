@@ -133,7 +133,7 @@ const Admin = () => {
               </p>
               <Button
                 size="sm"
-                onClick={() => setEditing({ content_type: activeTab, tags: [], is_active: true })}
+                onClick={() => setEditing({ content_type: activeTabDef.types[0], tags: [], is_active: true })}
                 className="text-xs h-8"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add {tab.label.slice(0, -1)}
