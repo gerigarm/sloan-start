@@ -41,25 +41,21 @@ const CHATBOT_PROMPTS = [
 // ─── Demo data for skip-auth mode ────────────────────────────────
 const isSkipAuth = () => localStorage.getItem("skip_auth") === "true";
 
-const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 42 }, (_, i) => ({
+// Full timeline: 2 weeks before + 6 weeks after = 8 weeks, 56 days
+// Demo data only covers first 3 weeks (W-2, W-1, W0 = 21 days)
+const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 21 }, (_, i) => ({
   energy_level: [
     45, 60, 55, 70, 50, 65, 75,
     60, 80, 55, 72, 68, 85, 78,
     65, 72, 80, 68, 75, 82, 70,
-    74, 85, 78, 82, 76, 88, 80,
-    78, 85, 72, 90, 82, 88, 76,
-    80, 92, 85, 78, 90, 88, 95,
   ][i],
-  created_at: new Date(Date.now() - (41 - i) * 86400000).toISOString(),
+  created_at: new Date(Date.now() - (55 - i) * 86400000).toISOString(), // start 56 days ago
 }));
 
 const DEMO_WEEKLY: WeeklyCheckin[] = [
-  { id: "d1", stress_level: 4, control_level: 2, confidence_level: 2, stress_causes: ["Too many deadlines", "Unclear priorities", "Family / relocation"], week_number: 0, created_at: new Date(Date.now() - 35 * 86400000).toISOString() },
-  { id: "d2", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Admin / logistics"], week_number: 1, created_at: new Date(Date.now() - 28 * 86400000).toISOString() },
-  { id: "d3", stress_level: 3, control_level: 3, confidence_level: 3, stress_causes: ["Recruiting pressure", "Too many events"], week_number: 2, created_at: new Date(Date.now() - 21 * 86400000).toISOString() },
-  { id: "d4", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Too many deadlines"], week_number: 3, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
-  { id: "d5", stress_level: 2, control_level: 4, confidence_level: 4, stress_causes: ["Recruiting pressure"], week_number: 4, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
-  { id: "d6", stress_level: 2, control_level: 4, confidence_level: 5, stress_causes: [], week_number: 5, created_at: new Date().toISOString() },
+  { id: "d1", stress_level: 4, control_level: 2, confidence_level: 2, stress_causes: ["Too many deadlines", "Unclear priorities", "Family / relocation"], week_number: 0, created_at: new Date(Date.now() - 55 * 86400000).toISOString() },
+  { id: "d2", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Admin / logistics"], week_number: 1, created_at: new Date(Date.now() - 48 * 86400000).toISOString() },
+  { id: "d3", stress_level: 3, control_level: 3, confidence_level: 3, stress_causes: ["Recruiting pressure", "Too many events"], week_number: 2, created_at: new Date(Date.now() - 41 * 86400000).toISOString() },
 ];
 
 // ─── Hooks ───────────────────────────────────────────────────────
@@ -314,21 +310,33 @@ const Wellbeing = () => {
 
   const latestWeekly = weeklyCheckins?.length ? weeklyCheckins[weeklyCheckins.length - 1] : null;
 
-  // Daily chart data
+  // Daily chart data — full 56-day (8-week) timeline
   const dailyData = useMemo(() => {
-    if (!dailyCheckins?.length) return [];
-    const grouped: Record<string, { total: number; count: number }> = {};
-    dailyCheckins.forEach(c => {
+    // Build a lookup from actual checkins
+    const checkinMap: Record<string, number> = {};
+    (dailyCheckins ?? []).forEach(c => {
       const date = c.created_at.slice(0, 10);
-      if (!grouped[date]) grouped[date] = { total: 0, count: 0 };
-      grouped[date].total += c.energy_level;
-      grouped[date].count++;
+      if (!checkinMap[date]) checkinMap[date] = 0;
+      checkinMap[date] += c.energy_level;
     });
-    return Object.entries(grouped).map(([date, { total, count }]) => ({
-      date,
-      avg: Math.round(total / count),
-      weekDay: new Date(date).toLocaleDateString(undefined, { weekday: "short" }),
-    }));
+    const countMap: Record<string, number> = {};
+    (dailyCheckins ?? []).forEach(c => {
+      const date = c.created_at.slice(0, 10);
+      countMap[date] = (countMap[date] ?? 0) + 1;
+    });
+
+    // Generate full 56-day timeline (W-2 through W6)
+    const startDate = new Date(Date.now() - 55 * 86400000); // 56 days ago
+    return Array.from({ length: 56 }, (_, i) => {
+      const d = new Date(startDate.getTime() + i * 86400000);
+      const date = d.toISOString().slice(0, 10);
+      const hasData = checkinMap[date] !== undefined;
+      return {
+        date,
+        avg: hasData ? Math.round(checkinMap[date] / countMap[date]) : null,
+        weekDay: d.toLocaleDateString(undefined, { weekday: "short" }),
+      };
+    });
   }, [dailyCheckins]);
 
   // Trend data for weekly metrics
@@ -504,17 +512,24 @@ const Wellbeing = () => {
         <CardContent className="px-4 pb-4">
           {dailyData.length > 0 ? (
             <div>
-              <div className="h-32 flex items-end gap-1">
+              <div className="h-32 flex items-end gap-[1px]">
                 {dailyData.map((d, i) => {
+                  if (d.avg === null) {
+                    return (
+                      <div key={d.date} className="flex-1 flex flex-col justify-end items-center h-full">
+                        <div className="w-full rounded-t-sm min-w-[4px] max-w-[14px] mx-auto h-1 bg-muted/40" />
+                      </div>
+                    );
+                  }
                   const hue = Math.round((d.avg / 100) * 120);
-                  const barHeight = Math.round((d.avg / 100) * 128); // 128px = h-32
+                  const barHeight = Math.round((d.avg / 100) * 128);
                   return (
                     <div key={d.date} className="flex-1 flex flex-col justify-end items-center group relative h-full">
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: barHeight }}
-                        transition={{ delay: i * 0.03, duration: 0.3 }}
-                        className="w-full rounded-t-sm min-w-[6px] max-w-[28px] mx-auto"
+                        transition={{ delay: i * 0.02, duration: 0.3 }}
+                        className="w-full rounded-t-sm min-w-[4px] max-w-[14px] mx-auto"
                         style={{ backgroundColor: `hsl(${hue}, 55%, 50%)` }}
                       />
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block
@@ -525,36 +540,15 @@ const Wellbeing = () => {
                   );
                 })}
               </div>
-              {/* Day labels */}
-              <div className="flex gap-1 mt-1">
-                {dailyData.map(d => (
-                  <div key={d.date} className="flex-1 text-center">
-                    <span className="text-[9px] text-muted-foreground">{d.weekDay.charAt(0)}</span>
+              {/* Week labels: W-2 through W6 */}
+              <div className="flex mt-1 border-t border-border pt-1">
+                {["W-2", "W-1", "Start", "W1", "W2", "W3", "W4", "W5", "W6"].map((label, i) => (
+                  <div key={label} style={{ flex: i === 0 ? 7 : 7 }} className="text-center">
+                    <span className={`text-[9px] font-medium ${
+                      i <= 2 ? "text-muted-foreground" : "text-muted-foreground/40"
+                    }`}>{label}</span>
                   </div>
                 ))}
-              </div>
-              {/* Week labels */}
-              <div className="flex mt-0.5 border-t border-border pt-1">
-                {(() => {
-                  // Group days into weeks
-                  const weeks: { start: number; count: number; label: string }[] = [];
-                  let weekNum = 1;
-                  let currentWeekStart = 0;
-                  dailyData.forEach((d, i) => {
-                    const dayOfWeek = new Date(d.date).getDay();
-                    if (i > 0 && dayOfWeek === 1) { // Monday = new week
-                      weeks.push({ start: currentWeekStart, count: i - currentWeekStart, label: `W${weekNum}` });
-                      weekNum++;
-                      currentWeekStart = i;
-                    }
-                  });
-                  weeks.push({ start: currentWeekStart, count: dailyData.length - currentWeekStart, label: `W${weekNum}` });
-                  return weeks.map(w => (
-                    <div key={w.label} style={{ flex: w.count }} className="text-center">
-                      <span className="text-[9px] font-medium text-muted-foreground">{w.label}</span>
-                    </div>
-                  ));
-                })()}
               </div>
             </div>
           ) : (
@@ -566,69 +560,83 @@ const Wellbeing = () => {
       </Card>
 
       {/* ─── 5. Wellbeing Progress Over Time ──────────────── */}
-      {weeklyCheckins && weeklyCheckins.length > 0 && (
-        <Card className="shadow-[var(--shadow-card)]">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="font-sans text-sm flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-primary" />
-              Progress Over Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-4">
-            {/* Full-width trend chart */}
-            <div className="relative">
-              <svg viewBox="0 0 300 120" className="w-full h-28" preserveAspectRatio="none">
-                {/* Grid lines */}
-                {[0, 1, 2, 3, 4].map(i => (
-                  <line key={i} x1="0" y1={i * 30} x2="300" y2={i * 30} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4 4" />
-                ))}
-                {/* Stress line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(0, 60%, 55%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={stressTrend.map((v, i) => `${(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Control line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(200, 60%, 50%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={controlTrend.map((v, i) => `${(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Confidence line */}
-                <polyline
-                  fill="none"
-                  stroke="hsl(150, 55%, 45%)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={confidenceTrend.map((v, i) => `${(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
-                />
-                {/* Data point dots */}
-                {stressTrend.map((v, i) => (
-                  <circle key={`s${i}`} cx={(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(0, 60%, 55%)" />
-                ))}
-                {controlTrend.map((v, i) => (
-                  <circle key={`c${i}`} cx={(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(200, 60%, 50%)" />
-                ))}
-                {confidenceTrend.map((v, i) => (
-                  <circle key={`cf${i}`} cx={(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(150, 55%, 45%)" />
-                ))}
-              </svg>
-              {/* Week labels */}
-              <div className="flex justify-between px-2 mt-1">
-                {weeklyCheckins.map((w, i) => (
-                  <span key={w.id} className="text-[10px] text-muted-foreground">W{(w.week_number ?? i) + 1}</span>
-                ))}
-              </div>
-            </div>
+      <Card className="shadow-[var(--shadow-card)]">
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="font-sans text-sm flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            Progress Over Time
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 space-y-4">
+          {/* Full 8-week timeline chart */}
+          {(() => {
+            const TOTAL_WEEKS = 8; // W-2 through W5 (indexes 0-7)
+            const weekLabels = ["W-2", "W-1", "Start", "W1", "W2", "W3", "W4", "W5"];
+            const chartW = 300;
+            const chartH = 120;
+            const pad = 10;
+            const usableW = chartW - pad * 2;
 
-            {/* Legend with current values */}
+            // Map week_number to x position: week_number 0 = W-2 (index 0)
+            const getX = (weekIdx: number) => pad + (weekIdx / (TOTAL_WEEKS - 1)) * usableW;
+            const getY = (val: number) => chartH - (val / 5) * 100;
+
+            // Map each checkin to its position on the 8-week timeline
+            const dataPoints = (weeklyCheckins ?? []).map((w, i) => ({
+              ...w,
+              weekIdx: w.week_number ?? i, // week_number 0 = first week = W-2
+            }));
+
+            const makePoints = (accessor: (w: WeeklyCheckin & { weekIdx: number }) => number) =>
+              dataPoints.map(w => `${getX(w.weekIdx)},${getY(accessor(w))}`).join(" ");
+
+            return (
+              <div className="relative">
+                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-28" preserveAspectRatio="none">
+                  {/* Grid lines */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <line key={i} x1="0" y1={i * 30} x2={chartW} y2={i * 30} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4 4" />
+                  ))}
+                  {/* Vertical week markers (faded for future) */}
+                  {weekLabels.map((_, i) => (
+                    <line key={`vl${i}`} x1={getX(i)} y1="0" x2={getX(i)} y2={chartH} stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 4" />
+                  ))}
+                  {dataPoints.length >= 2 && (
+                    <>
+                      <polyline fill="none" stroke="hsl(0, 60%, 55%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.stress_level)} />
+                      <polyline fill="none" stroke="hsl(200, 60%, 50%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.control_level)} />
+                      <polyline fill="none" stroke="hsl(150, 55%, 45%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        points={makePoints(w => w.confidence_level)} />
+                    </>
+                  )}
+                  {/* Data dots */}
+                  {dataPoints.map((w, i) => (
+                    <g key={w.id}>
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.stress_level)} r="3" fill="hsl(0, 60%, 55%)" />
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.control_level)} r="3" fill="hsl(200, 60%, 50%)" />
+                      <circle cx={getX(w.weekIdx)} cy={getY(w.confidence_level)} r="3" fill="hsl(150, 55%, 45%)" />
+                    </g>
+                  ))}
+                </svg>
+                {/* Week labels */}
+                <div className="flex justify-between px-1 mt-1">
+                  {weekLabels.map((label, i) => {
+                    const hasData = dataPoints.some(d => d.weekIdx === i);
+                    return (
+                      <span key={label} className={`text-[10px] ${hasData ? "text-muted-foreground font-medium" : "text-muted-foreground/40"}`}>
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Legend with current values */}
+          {weeklyCheckins && weeklyCheckins.length > 0 && (
             <div className="flex items-center gap-4 text-xs">
               {[
                 { label: "Stress", data: stressTrend, color: "hsl(0, 60%, 55%)", inverted: true },
@@ -653,9 +661,9 @@ const Wellbeing = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* ─── 6. Chatbot Shortcuts ─────────────────────────── */}
       <Card className="shadow-[var(--shadow-card)]">
