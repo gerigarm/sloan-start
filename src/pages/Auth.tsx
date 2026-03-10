@@ -5,65 +5,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Compass className="h-8 w-8 text-primary animate-spin" />
-      </div>
-    );
+  // If already "logged in" via stored email, go to dashboard
+  const storedEmail = localStorage.getItem("user_email");
+  if (storedEmail) {
+    navigate("/dashboard", { replace: true });
+    return null;
   }
 
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.endsWith("@mit.edu")) {
+    if (!email.trim() || !email.includes("@")) {
       toast({
         title: "Invalid email",
-        description: "Please use your MIT email address (@mit.edu).",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin + "/dashboard",
-        },
-      });
-      if (error) throw error;
-      setSent(true);
-      toast({
-        title: "Check your MIT email",
-        description: "We sent you a magic link to sign in.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    // Store email locally — no real auth for prototype
+    localStorage.setItem("user_email", email.trim());
+    localStorage.setItem("skip_auth", "true");
+
+    // Check if onboarding was completed for this email
+    const onboardingDone = localStorage.getItem(`onboarding_done_${email.trim()}`);
+    if (onboardingDone === "true") {
+      navigate("/dashboard");
+    } else {
+      navigate("/onboarding");
     }
   };
 
@@ -73,66 +52,36 @@ const Auth = () => {
         <div className="flex flex-col items-center gap-2">
           <Compass className="h-8 w-8 text-primary" />
           <h1 className="font-serif text-2xl text-foreground">Sloan 6W</h1>
-          <p className="text-sm text-muted-foreground">Sign in with your MIT email</p>
+          <p className="text-sm text-muted-foreground">Enter your email to get started</p>
         </div>
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="font-sans text-lg">
-              {sent ? "Check your inbox" : "Welcome"}
-            </CardTitle>
+            <CardTitle className="font-sans text-lg">Welcome</CardTitle>
             <CardDescription>
-              {sent
-                ? "Click the link we sent to your MIT email to sign in."
-                : "Enter your @mit.edu email to receive a sign-in link."}
+              Enter your email to access your personalized pre-arrival guide.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {sent ? (
-              <div className="space-y-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Didn't receive it?
-                </p>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setSent(false)}
-                >
-                  Try again
-                </Button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
               </div>
-            ) : (
-              <form onSubmit={handleMagicLink} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">MIT Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@mit.edu"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Send magic link
-                </Button>
-              </form>
-            )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Continue
+              </Button>
+            </form>
           </CardContent>
         </Card>
-
-        <Button
-          variant="ghost"
-          className="w-full text-xs text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            localStorage.setItem("skip_auth", "true");
-            navigate("/dashboard");
-          }}
-        >
-          Skip for now →
-        </Button>
       </div>
     </div>
   );
