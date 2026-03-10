@@ -521,12 +521,36 @@ const Wellbeing = () => {
                   );
                 })}
               </div>
+              {/* Day labels */}
               <div className="flex gap-1 mt-1">
                 {dailyData.map(d => (
                   <div key={d.date} className="flex-1 text-center">
-                    <span className="text-[9px] text-muted-foreground">{d.weekDay}</span>
+                    <span className="text-[9px] text-muted-foreground">{d.weekDay.charAt(0)}</span>
                   </div>
                 ))}
+              </div>
+              {/* Week labels */}
+              <div className="flex mt-0.5 border-t border-border pt-1">
+                {(() => {
+                  // Group days into weeks
+                  const weeks: { start: number; count: number; label: string }[] = [];
+                  let weekNum = 1;
+                  let currentWeekStart = 0;
+                  dailyData.forEach((d, i) => {
+                    const dayOfWeek = new Date(d.date).getDay();
+                    if (i > 0 && dayOfWeek === 1) { // Monday = new week
+                      weeks.push({ start: currentWeekStart, count: i - currentWeekStart, label: `W${weekNum}` });
+                      weekNum++;
+                      currentWeekStart = i;
+                    }
+                  });
+                  weeks.push({ start: currentWeekStart, count: dailyData.length - currentWeekStart, label: `W${weekNum}` });
+                  return weeks.map(w => (
+                    <div key={w.label} style={{ flex: w.count }} className="text-center">
+                      <span className="text-[9px] font-medium text-muted-foreground">{w.label}</span>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           ) : (
