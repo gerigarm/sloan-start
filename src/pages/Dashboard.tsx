@@ -225,7 +225,35 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {isLoading ? <Loading /> : <PanelList items={deadlines} emptyText="No deadlines this week" />}
+            {isLoading ? <Loading /> : deadlines.length > 0 ? (
+              <ul className="space-y-1.5">
+                {deadlines.slice(0, 4).map((item) => (
+                  <li key={item.id} className="text-xs text-foreground flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-1.5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                      <span>{item.title}</span>
+                    </div>
+                    <span className="text-muted-foreground whitespace-nowrap">
+                      {item.metadata && typeof item.metadata === "object" && "date" in item.metadata
+                        ? String((item.metadata as Record<string, unknown>).date)
+                        : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-1.5">
+                {dummyDeadlines.map((d) => (
+                  <li key={d.title} className="text-xs text-foreground flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-1.5">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                      <span>{d.title}</span>
+                    </div>
+                    <span className="text-muted-foreground whitespace-nowrap">{d.date}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 
