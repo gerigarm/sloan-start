@@ -156,13 +156,19 @@ const Dashboard = () => {
   const allSources = sources ?? [];
   const priorities = getPersonalizedItems(allSources, "milestone", ctx, 6)
     .filter(s => s.week_relevant === null || s.week_relevant === ctx.currentWeek);
-  const deferred = getPersonalizedItems(allSources, "milestone", ctx, 6)
-    .filter(s => s.week_relevant !== null && s.week_relevant > ctx.currentWeek);
   const deadlines = getPersonalizedItems(allSources, "deadline", ctx, 6);
   const linksContacts = getPersonalizedItems(allSources, ["link", "contact", "resource"], ctx, 6);
   const nudges = generateNudges(allSources, ctx);
   const weeklyNote = allSources.find((s) => s.content_type === "weekly_guidance" && (s.week_relevant === null || s.week_relevant === ctx.currentWeek));
   const stressMode = isHighStress(ctx.wellbeing);
+
+  // Dummy deadlines when none from DB
+  const dummyDeadlines = [
+    { title: "Housing application due", date: "Mar 15" },
+    { title: "Health insurance enrollment", date: "Mar 20" },
+    { title: "Course registration opens", date: "Mar 25" },
+    { title: "IT account setup deadline", date: "Apr 1" },
+  ];
 
   const priorityNotes = (userNotes ?? []).filter((n) => n.category === "priority");
   const deferredNotes = (userNotes ?? []).filter((n) => n.category === "deferred");
