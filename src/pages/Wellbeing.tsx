@@ -605,6 +605,38 @@ const Wellbeing = () => {
         </CardContent>
       </Card>
 
+      {/* ─── This Week's Support ─────────────────────────── */}
+      <Card className="shadow-[var(--shadow-card)]">
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="font-sans text-sm flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5 text-success" />
+            This Week's Support
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5 h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Zap className="h-3 w-3 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-foreground">Take a break & recharge</p>
+                <p className="text-[11px] text-muted-foreground">Enjoy a 20-minute session at the campus gym — stretch, move, reset.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5 h-5 w-5 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+                <Heart className="h-3 w-3 text-success" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-foreground">Join a campus activity</p>
+                <p className="text-[11px] text-muted-foreground">Check out yoga, meditation, or social clubs happening this week on campus.</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ─── Encouragement ────────────────────────────────── */}
       {totalDaily > 0 && (
         <motion.div
