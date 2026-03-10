@@ -52,12 +52,9 @@ const DEMO_DAILY: DailyCheckin[] = Array.from({ length: 28 }, (_, i) => ({
 }));
 
 const DEMO_WEEKLY: WeeklyCheckin[] = [
-  { id: "d1", stress_level: 5, control_level: 1, confidence_level: 2, stress_causes: ["Too many deadlines", "Unclear priorities", "Family / relocation"], week_number: 0, created_at: new Date(Date.now() - 35 * 86400000).toISOString() },
-  { id: "d2", stress_level: 4, control_level: 2, confidence_level: 3, stress_causes: ["Too many deadlines", "Recruiting pressure"], week_number: 1, created_at: new Date(Date.now() - 28 * 86400000).toISOString() },
-  { id: "d3", stress_level: 4, control_level: 3, confidence_level: 3, stress_causes: ["Recruiting pressure", "Too many events"], week_number: 2, created_at: new Date(Date.now() - 21 * 86400000).toISOString() },
-  { id: "d4", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Admin / logistics"], week_number: 3, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
-  { id: "d5", stress_level: 2, control_level: 4, confidence_level: 4, stress_causes: ["Unclear priorities"], week_number: 4, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
-  { id: "d6", stress_level: 2, control_level: 4, confidence_level: 5, stress_causes: [], week_number: 5, created_at: new Date().toISOString() },
+  { id: "d1", stress_level: 4, control_level: 2, confidence_level: 2, stress_causes: ["Too many deadlines", "Unclear priorities", "Family / relocation"], week_number: 0, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
+  { id: "d2", stress_level: 3, control_level: 3, confidence_level: 3, stress_causes: ["Too many deadlines", "Recruiting pressure"], week_number: 1, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+  { id: "d3", stress_level: 3, control_level: 3, confidence_level: 4, stress_causes: ["Admin / logistics", "Too many events"], week_number: 2, created_at: new Date().toISOString() },
 ];
 
 // ─── Hooks ───────────────────────────────────────────────────────
