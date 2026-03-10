@@ -485,18 +485,6 @@ const Wellbeing = () => {
         </CardContent>
       </Card>
 
-      {/* ─── 3. This Week's Support ──────────────────────── */}
-      <Card className="shadow-[var(--shadow-card)]">
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="font-sans text-sm flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5 text-success" />
-            This Week's Support
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <SupportRecommendation latestWeekly={latestWeekly} knowledgeSources={knowledgeSources ?? []} />
-        </CardContent>
-      </Card>
 
       {/* ─── 4. Daily Energy Graph ────────────────────────── */}
       <Card className="shadow-[var(--shadow-card)]">
