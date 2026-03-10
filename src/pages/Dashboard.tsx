@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle, Loader2, Plus, Check, X } from "lucide-react";
 import JourneyGraph from "@/components/JourneyGraph";
+import EnergyBar from "@/components/EnergyBar";
 import { DashboardChatWidget } from "@/components/chat/DashboardChatWidget";
 import { NudgeCard } from "@/components/dashboard/NudgeCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -177,6 +178,8 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-5">
+      <EnergyBar />
+
       <div>
         <h1 className="font-serif text-3xl text-foreground">Your Week</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
