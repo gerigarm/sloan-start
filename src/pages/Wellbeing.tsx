@@ -542,42 +542,84 @@ const Wellbeing = () => {
               Progress Over Time
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-3">
-            {[
-              { label: "Stress", data: stressTrend, color: "hsl(0, 60%, 55%)", inverted: true },
-              { label: "Control", data: controlTrend, color: "hsl(200, 60%, 50%)", inverted: false },
-              { label: "Confidence", data: confidenceTrend, color: "hsl(150, 55%, 45%)", inverted: false },
-            ].map(metric => {
-              const latest = metric.data[metric.data.length - 1];
-              const prev = metric.data.length > 1 ? metric.data[metric.data.length - 2] : null;
-              const delta = prev !== null ? latest - prev : 0;
-              const improving = metric.inverted ? delta < 0 : delta > 0;
+          <CardContent className="px-4 pb-4 space-y-4">
+            {/* Full-width trend chart */}
+            <div className="relative">
+              <svg viewBox="0 0 300 120" className="w-full h-28" preserveAspectRatio="none">
+                {/* Grid lines */}
+                {[0, 1, 2, 3, 4].map(i => (
+                  <line key={i} x1="0" y1={i * 30} x2="300" y2={i * 30} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4 4" />
+                ))}
+                {/* Stress line */}
+                <polyline
+                  fill="none"
+                  stroke="hsl(0, 60%, 55%)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={stressTrend.map((v, i) => `${(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
+                />
+                {/* Control line */}
+                <polyline
+                  fill="none"
+                  stroke="hsl(200, 60%, 50%)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={controlTrend.map((v, i) => `${(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
+                />
+                {/* Confidence line */}
+                <polyline
+                  fill="none"
+                  stroke="hsl(150, 55%, 45%)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={confidenceTrend.map((v, i) => `${(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10},${120 - (v / 5) * 100}`).join(" ")}
+                />
+                {/* Data point dots */}
+                {stressTrend.map((v, i) => (
+                  <circle key={`s${i}`} cx={(i / Math.max(stressTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(0, 60%, 55%)" />
+                ))}
+                {controlTrend.map((v, i) => (
+                  <circle key={`c${i}`} cx={(i / Math.max(controlTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(200, 60%, 50%)" />
+                ))}
+                {confidenceTrend.map((v, i) => (
+                  <circle key={`cf${i}`} cx={(i / Math.max(confidenceTrend.length - 1, 1)) * 280 + 10} cy={120 - (v / 5) * 100} r="3" fill="hsl(150, 55%, 45%)" />
+                ))}
+              </svg>
+              {/* Week labels */}
+              <div className="flex justify-between px-2 mt-1">
+                {weeklyCheckins.map((w, i) => (
+                  <span key={w.id} className="text-[10px] text-muted-foreground">W{(w.week_number ?? i) + 1}</span>
+                ))}
+              </div>
+            </div>
 
-              return (
-                <div key={metric.label} className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground">{metric.label}</p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-foreground">{latest}/5</span>
-                      {delta !== 0 && (
-                        <span className={`text-[10px] ${improving ? "text-success" : "text-destructive"}`}>
-                          {delta > 0 ? "+" : ""}{delta}
-                        </span>
-                      )}
-                    </div>
+            {/* Legend with current values */}
+            <div className="flex items-center gap-4 text-xs">
+              {[
+                { label: "Stress", data: stressTrend, color: "hsl(0, 60%, 55%)", inverted: true },
+                { label: "Control", data: controlTrend, color: "hsl(200, 60%, 50%)", inverted: false },
+                { label: "Confidence", data: confidenceTrend, color: "hsl(150, 55%, 45%)", inverted: false },
+              ].map(metric => {
+                const latest = metric.data[metric.data.length - 1];
+                const prev = metric.data.length > 1 ? metric.data[metric.data.length - 2] : null;
+                const delta = prev !== null ? latest - prev : 0;
+                const improving = metric.inverted ? delta < 0 : delta > 0;
+                return (
+                  <div key={metric.label} className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: metric.color }} />
+                    <span className="text-muted-foreground">{metric.label}</span>
+                    <span className="font-semibold text-foreground">{latest}/5</span>
+                    {delta !== 0 && (
+                      <span className={`text-[10px] ${improving ? "text-success" : "text-destructive"}`}>
+                        {delta > 0 ? "+" : ""}{delta}
+                      </span>
+                    )}
                   </div>
-                  <MiniTrendLine data={metric.data} color={metric.color} />
-                </div>
-              );
-            })}
-
-            {/* Week labels */}
-            <div className="flex gap-1 pt-1 border-t border-border">
-              {weeklyCheckins.map((w, i) => (
-                <div key={w.id} className="flex-1 text-center">
-                  <span className="text-[9px] text-muted-foreground">W{(w.week_number ?? i) + 1}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
