@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { CalendarClock, ExternalLink, Flag, Pause, MessageCircle, Loader2, Plus, Check, X } from "lucide-react";
 import JourneyGraph from "@/components/JourneyGraph";
 import { DashboardChatWidget } from "@/components/chat/DashboardChatWidget";
+import { NudgeCard } from "@/components/dashboard/NudgeCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { differenceInWeeks } from "date-fns";
+import { usePersonalization, trackPersonalizationEvent } from "@/hooks/usePersonalization";
+import { getPersonalizedItems, generateNudges, isHighStress } from "@/lib/personalization";
 import type { Tables } from "@/integrations/supabase/types";
 
 type KnowledgeSource = Tables<"knowledge_sources">;
@@ -21,24 +23,6 @@ interface UserNote {
   is_completed: boolean;
   created_at: string;
 }
-
-const useCurrentWeek = () => {
-  const { user } = useAuth();
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("created_at")
-        .eq("user_id", user!.id)
-        .single();
-      return data;
-    },
-    enabled: !!user,
-  });
-  if (!profile) return 0;
-  return Math.min(Math.max(differenceInWeeks(new Date(), new Date(profile.created_at)), 0), 5);
-};
 
 const useKnowledgeSources = () =>
   useQuery({
@@ -55,7 +39,6 @@ const useUserNotes = () => {
   return useQuery({
     queryKey: ["user_notes", user?.id],
     queryFn: async () => {
-      // Use raw query since types may not be generated yet
       const { data, error } = await (supabase as any).from("user_notes").select("*").eq("user_id", user!.id).order("created_at", { ascending: true });
       if (error) throw error;
       return data as UserNote[];
@@ -127,7 +110,13 @@ const PanelList = ({ items, emptyText }: { items: KnowledgeSource[]; emptyText: 
           <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
           <span>
             {item.url ? (
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary transition-colors">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:text-primary transition-colors"
+                onClick={() => trackPersonalizationEvent("resource_clicked", { source_id: item.id, title: item.title })}
+              >
                 {item.title}
               </a>
             ) : item.title}
@@ -141,7 +130,7 @@ const PanelList = ({ items, emptyText }: { items: KnowledgeSource[]; emptyText: 
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const currentWeek = useCurrentWeek();
+  const { ctx } = usePersonalization();
   const { data: sources, isLoading } = useKnowledgeSources();
   const { data: userNotes } = useUserNotes();
   const queryClient = useQueryClient();
@@ -162,12 +151,17 @@ const Dashboard = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user_notes"] }),
   });
 
-  const relevant = (sources ?? []).filter((s) => s.week_relevant === null || s.week_relevant === currentWeek);
-  const priorities = relevant.filter((s) => s.content_type === "milestone");
-  const deferred = (sources ?? []).filter((s) => s.content_type === "milestone" && s.week_relevant !== null && s.week_relevant > currentWeek);
-  const deadlines = relevant.filter((s) => s.content_type === "deadline");
-  const linksContacts = relevant.filter((s) => ["link", "contact", "resource"].includes(s.content_type));
-  const weeklyNote = relevant.find((s) => s.content_type === "weekly_guidance");
+  // ─── Personalized content ─────────────────────────────────────
+  const allSources = sources ?? [];
+  const priorities = getPersonalizedItems(allSources, "milestone", ctx, 6)
+    .filter(s => s.week_relevant === null || s.week_relevant === ctx.currentWeek);
+  const deferred = getPersonalizedItems(allSources, "milestone", ctx, 6)
+    .filter(s => s.week_relevant !== null && s.week_relevant > ctx.currentWeek);
+  const deadlines = getPersonalizedItems(allSources, "deadline", ctx, 6);
+  const linksContacts = getPersonalizedItems(allSources, ["link", "contact", "resource"], ctx, 6);
+  const nudges = generateNudges(allSources, ctx);
+  const weeklyNote = allSources.find((s) => s.content_type === "weekly_guidance" && (s.week_relevant === null || s.week_relevant === ctx.currentWeek));
+  const stressMode = isHighStress(ctx.wellbeing);
 
   const priorityNotes = (userNotes ?? []).filter((n) => n.category === "priority");
   const deferredNotes = (userNotes ?? []).filter((n) => n.category === "deferred");
@@ -186,9 +180,12 @@ const Dashboard = () => {
       <div>
         <h1 className="font-serif text-3xl text-foreground">Your Week</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Week {currentWeek + 1} of 6 — Personalized priorities and deadlines
+          Week {ctx.currentWeek + 1} of 6 — {stressMode ? "Simplified view — focus on what matters most" : "Personalized priorities and deadlines"}
         </p>
       </div>
+
+      {/* Personalized nudges */}
+      {nudges.length > 0 && <NudgeCard nudges={nudges} />}
 
       <JourneyGraph />
 
