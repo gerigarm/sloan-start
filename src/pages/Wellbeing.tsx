@@ -503,11 +503,12 @@ const Wellbeing = () => {
               <div className="h-32 flex items-end gap-1">
                 {dailyData.map((d, i) => {
                   const hue = Math.round((d.avg / 100) * 120);
+                  const barHeight = Math.round((d.avg / 100) * 128); // 128px = h-32
                   return (
-                    <div key={d.date} className="flex-1 flex flex-col items-center group relative">
+                    <div key={d.date} className="flex-1 flex flex-col justify-end items-center group relative h-full">
                       <motion.div
                         initial={{ height: 0 }}
-                        animate={{ height: `${d.avg}%` }}
+                        animate={{ height: barHeight }}
                         transition={{ delay: i * 0.03, duration: 0.3 }}
                         className="w-full rounded-t-sm min-w-[6px] max-w-[28px] mx-auto"
                         style={{ backgroundColor: `hsl(${hue}, 55%, 50%)` }}
