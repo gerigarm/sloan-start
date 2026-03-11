@@ -14,11 +14,8 @@ const Auth = () => {
   const { toast } = useToast();
 
   // If already "logged in" via stored email, go to dashboard
-  const storedEmail = localStorage.getItem("user_email");
-  if (storedEmail) {
-    const onboardingDone = localStorage.getItem(`onboarding_done_${storedEmail}`);
-    return <Navigate to={onboardingDone === "true" ? "/dashboard" : "/onboarding"} replace />;
-  }
+  // Clear previous session so the user can re-enter or change email
+  // (ProtectedRoute handles redirects for already-authenticated users on protected pages)
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
