@@ -16,8 +16,8 @@ const Auth = () => {
   // If already "logged in" via stored email, go to dashboard
   const storedEmail = localStorage.getItem("user_email");
   if (storedEmail) {
-    navigate("/dashboard", { replace: true });
-    return null;
+    const onboardingDone = localStorage.getItem(`onboarding_done_${storedEmail}`);
+    return <Navigate to={onboardingDone === "true" ? "/dashboard" : "/onboarding"} replace />;
   }
 
   const handleLogin = (e: React.FormEvent) => {
