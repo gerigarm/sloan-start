@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Compass, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,8 @@ const Auth = () => {
   // If already "logged in" via stored email, go to dashboard
   const storedEmail = localStorage.getItem("user_email");
   if (storedEmail) {
-    navigate("/dashboard", { replace: true });
-    return null;
+    const onboardingDone = localStorage.getItem(`onboarding_done_${storedEmail}`);
+    return <Navigate to={onboardingDone === "true" ? "/dashboard" : "/onboarding"} replace />;
   }
 
   const handleLogin = (e: React.FormEvent) => {
